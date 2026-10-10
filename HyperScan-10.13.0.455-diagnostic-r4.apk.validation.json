@@ -66,7 +66,7 @@
     "sha256": "c0dd4201e7232abadcf0bff5a37d5b7ae72be2fab35606150b3d2fd235cbc852",
     "structural_checks_passed": true
   },
-  "sha256": "07ca88be495d54aabf51e0949e0a04ab1e1ba7cd29664188d17cf197491ddc02",
+  "sha256": "ff6dc82346baf2f8e969a478818f5d67a3ce045451ac8831f5962ec99fcfe7fe",
   "label": "HyperScan 诊断版",
   "diagnostics_hook": [
     "Lcom/ucpro/MainActivity;",
