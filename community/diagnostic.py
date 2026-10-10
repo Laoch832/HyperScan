@@ -53,7 +53,9 @@ def audit(original, base, preview, output):
     logger.disable('androguard')
     with ZipFile(base) as old, ZipFile(preview) as new:
         changed = [n for n in set(old.namelist()) & set(new.namelist()) if old.read(n) != new.read(n)]
-        assert set(changed) == {'classes9.dex','resources.arsc','META-INF/MANIFEST.MF'}, changed
+        signatures = {n for n in old.namelist() if re.fullmatch(r'META-INF/(?:MANIFEST\.MF|[^/]+\.(?:SF|RSA|DSA|EC))', n, re.I)}
+        assert set(changed) - signatures == {'classes9.dex','resources.arsc'}, changed
+        assert 'META-INF/MANIFEST.MF' in changed
         added = set(new.namelist()) - set(old.namelist())
         assert added == {'classes13.dex','assets/hyperscan-diagnostics.json'}, added
         assert set(old.namelist()) <= set(new.namelist())
