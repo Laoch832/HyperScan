@@ -4,6 +4,7 @@ export async function recognize(image: string, progress: (value: number) => void
     workerPath: `${location.origin}/ocr/worker.min.js`,
     corePath: `${location.origin}/ocr/core`,
     langPath: `${location.origin}/ocr/lang`,
+    gzip: false,
     logger: message => { if (message.status === 'recognizing text') progress(message.progress); },
   });
   try { return (await worker.recognize(image)).data.text; }

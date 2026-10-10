@@ -1,5 +1,6 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
-  appId: 'org.paperscan.community', appName: 'HyperScan', webDir: 'dist',
+  appId: 'app.hyperscan.android', appName: 'HyperScan', webDir: 'dist',
+  server: { hostname: 'localhost', androidScheme: 'https' },
 };
 export default config;

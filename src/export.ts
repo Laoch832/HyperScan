@@ -1,9 +1,8 @@
 import { jsPDF } from 'jspdf';
-import { Capacitor } from '@capacitor/core';
-import { Directory, Filesystem } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import type { ScanDocument } from './storage';
 import { loadImage } from './image';
+const localExport = registerPlugin<{ save(options: { filename: string; mime: string; data: string }): Promise<{ cancelled: boolean }> }>('OfflineExport');
 
 export async function createPdf(doc: ScanDocument): Promise<Blob> {
   if (!doc.pages.length) throw new Error('请先添加至少一页文档。');
@@ -28,8 +27,8 @@ export async function exportFile(blob: Blob, filename: string): Promise<void> {
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(blob);
     });
-    const file = await Filesystem.writeFile({ path: `exports/${safeName}`, data, directory: Directory.Cache, recursive: true });
-    await Share.share({ title: safeName, files: [file.uri] });
+    const result = await localExport.save({ filename: safeName, mime: blob.type.startsWith('text/') ? 'text/plain' : 'application/pdf', data });
+    if (result.cancelled) throw new Error('已取消保存。');
   } else {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');

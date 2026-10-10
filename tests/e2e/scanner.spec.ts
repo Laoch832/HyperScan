@@ -46,9 +46,13 @@ test('imports, crops, rotates, enhances, persists, reorders and exports a two pa
   await page.screenshot({ path: 'test-results/workspace.png', fullPage: true });
 });
 
-test('recognizes text locally without requests to external services', async ({ page }) => {
+test('recognizes text locally while external services are blocked', async ({ page, context }) => {
   const externalRequests: string[] = [];
-  page.on('request', request => { if (/^https?:/.test(request.url()) && !request.url().startsWith('http://127.0.0.1:5173')) externalRequests.push(request.url()); });
+  context.on('request', request => { if (/^https?:/.test(request.url()) && !request.url().startsWith('http://127.0.0.1:5173/')) externalRequests.push(request.url()); });
+  await context.route('**/*', route => {
+    const url = route.request().url();
+    return /^https?:/.test(url) && !url.startsWith('http://127.0.0.1:5173/') ? route.abort() : route.continue();
+  });
   await page.goto('/'); await importPage(page);
   await page.getByRole('button', { name: '识别当前页文字' }).click();
   await expect(page.getByLabel('识别结果')).toHaveValue(/TEST DOCUMENT/, { timeout: 80000 });
@@ -56,6 +60,19 @@ test('recognizes text locally without requests to external services', async ({ p
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: '导出全部文字 .txt' }).click();
   expect((await downloadPromise).suggestedFilename()).toMatch(/\.txt$/);
+});
+
+test('expressive mobile workspace supports dark mode and stays within the viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: '纸张，变成可能。' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const background = await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
+  expect(background).toBe('rgb(23, 19, 30)');
+  await page.screenshot({ path: 'test-results/expressive-mobile-dark.png', fullPage: true });
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.screenshot({ path: 'test-results/expressive-mobile-light.png', fullPage: true });
 });
 
 test('small screens fit and deleting a saved document survives reload', async ({ page }) => {

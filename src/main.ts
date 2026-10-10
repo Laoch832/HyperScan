@@ -35,14 +35,14 @@ function render(): void {
   const visible = documents.filter(doc => doc.name.toLowerCase().includes(search.toLowerCase()));
   app.innerHTML = `
     <aside class="sidebar">
-      <a class="brand" href="#" aria-label="HyperScan 首页"><span class="brand-mark">${icon('scan')}</span><span>HyperScan<small>COMMUNITY EDITION</small></span></a>
+      <a class="brand" href="#" aria-label="HyperScan 首页"><span class="brand-mark"><img src="/hyperscan.svg" width="40" height="40" alt="" /></span><span>HyperScan<small>OFFLINE · OPEN SOURCE</small></span></a>
       <button class="new-document primary" data-action="new">${icon('plus')} 新建扫描</button>
       <div class="nav active">${icon('folder')} 我的文档 <span>${documents.length}</span></div>
       <div class="sidebar-bottom">${icon('shield')}<div>文档留在你的设备上<small>本地处理 · 自由使用</small></div></div>
     </aside>
     <main>
-      <header><span class="breadcrumb">工作空间 <span>/</span> 我的文档</span><span class="edition">社区版 0.1</span></header>
-      <section class="heading"><div><p class="eyebrow">YOUR EVERYDAY SCANNER</p><h1>每一页，都清晰。</h1><p class="subtitle">从一张照片开始，把纸张整理成数字文档。</p></div><div class="local-badge"><span></span> 本地工作空间</div></section>
+      <header><span class="breadcrumb">工作空间 <span>/</span> 我的文档</span><span class="edition">离线版 0.2</span></header>
+      <section class="heading"><div><p class="eyebrow">MAKE ROOM FOR YOUR IDEAS</p><h1>纸张，变成可能。</h1><p class="subtitle">拍摄、编辑、识字、导出。每一步，都在你的设备上。</p></div><div class="local-badge"><span></span> 无需联网</div></section>
       <section class="workspace">
         <div class="editor-panel">
           <div class="panel-heading"><div><label class="sr-only" for="document-name">文档名称</label><input id="document-name" maxlength="120" value="${escape(current.name)}" /><span class="page-count">${current.pages.length} 页${dirty ? ' · 未保存' : ''}</span></div><button class="icon-button" data-action="save" aria-label="保存文档" title="保存文档" ${!current.pages.length ? 'disabled' : ''}>${icon('save')}</button></div>

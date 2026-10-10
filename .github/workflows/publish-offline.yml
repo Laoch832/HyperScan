@@ -1,0 +1,21 @@
+name: Publish HyperScan independent offline 0.2.0
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: release-inputs-offline-0.2.0
+          persist-credentials: false
+      - name: Verify release inputs
+        run: sha256sum --check RELEASE-SHA256SUMS.txt
+      - name: Publish independent offline release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload offline-0.2.0 HyperScan-0.2.0-offline.apk HyperScan-Source.zip HyperScan-0.2.0-offline.apk.validation.json RELEASE-SHA256SUMS.txt
