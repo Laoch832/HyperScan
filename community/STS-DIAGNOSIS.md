@@ -17,3 +17,30 @@
 ## 未确认
 
 当前片段未包含解密返回值及后续上传/PDF 最终失败。重签名兼容性、登录必要性和服务端额度仍不能由该片段定论。R5 是诊断版，未声称修复；需要真机重现后根据上述结果和后续错误定位。不得用空凭据、假成功结果或关闭 TLS 验证替代修复。
+
+## R5 真机结果：安全数据文件不匹配
+
+用户随后提供的 01:35:55–01:36:05 日志重复出现：
+
+```text
+CRYPTO_DECRYPT_EXCEPTION sdk_code=302 exception_type=com.alibaba.wireless.security.open.SecException
+STS_RESULT response_code=0 accessId_present=false accessSecret_present=false credential_present=false
+```
+
+该 APK 自带 `com.alibaba.wireless.security.SecExceptionCode` 明确定义 `SEC_ERROR_STA_DATA_FILE_MISMATCH = 0x12e`，即十进制 302。因此现在可以确认：STS 响应进入业务成功分支，但本地安全组件解密发生数据文件不匹配，三个解密后凭据均为空。该结果会阻断正常的凭据上传流程；这仍不代表其后的全部 PDF 问题都已排除。
+
+原 APK 与已发布 R5 逐字节比较，下列 SDK 文件保持一致：
+
+- `lib/arm64-v8a/libsgmain.so`
+- `lib/arm64-v8a/libsgmainso-6.8.260404.so`
+- `lib/arm64-v8a/libsgmainso.version.so`
+- `res/drawable/yw_1222.jpg`
+- `res/drawable/yw_1222_mwua.jpg`
+
+社区版签名已变更，而安全数据文件仍来自原版，所以签名与 SDK 安全数据的匹配关系是重点待核查项。302 本身不能证明具体是哪一项绑定不匹配，也不能直接等同于“服务器拒绝社区版签名”。
+
+### 内部接入所需条件
+
+请安全 SDK/服务端维护团队核实当前应用包名 `com.quark.scanking`、SDK 版本和社区版签名 SHA256 `1752b2d0c8a00838a7c79e84224fed34064888a7cdc1f280b872e2944be045fb` 的配置，按 SDK 支持的流程提供匹配的安全数据资源，并确认 STS 返回的密文可由该客户端配置解密。如果需要重新生成签名配置，由内部签名流水线完成；不要将签名私钥或 STS 凭据放入公共仓库。
+
+拿到匹配配置后，在隔离构建目录替换指定资源，保留诊断观察点，重新签名和审计。真机验收需看到三个 `*_present=true`、实际上传成功和 PDF 加载/导出成功；仅消失 302 不足以宣称完整修复。当前没有匹配的内部 SDK 配置，因此没有发布宣称修复的 R6。
