@@ -1,0 +1,26 @@
+name: Publish verified community preview
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Fetch prepared release inputs
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: release-inputs-preview-r2
+          persist-credentials: false
+      - name: Reassemble and verify exact tested APK
+        run: |
+          cat apk.part-* > QuarkScan-Community-10.13.0.455-preview-r2.apk
+          sha256sum --check RELEASE-SHA256SUMS.txt
+      - name: Publish release attachments
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag=community-preview-10.13.0.455
+          gh release upload "$tag" QuarkScan-Community-10.13.0.455-preview-r2.apk HyperScan-Source.zip QuarkScan-Community-10.13.0.455-preview-r2.apk.validation.json RELEASE-SHA256SUMS.txt
