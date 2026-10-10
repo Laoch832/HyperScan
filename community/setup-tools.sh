@@ -25,3 +25,10 @@ fi
 java -jar /workspace/tools/apktool_3.0.3.jar --version
 /workspace/tools/android-build-tools/android-16/apksigner version
 /workspace/tools/platform-tools/adb version
+
+# API 36 compile stubs for the internal diagnostic provider; upstream SDK XML SHA-1.
+fetch_checked https://dl.google.com/android/repository/platform-36_r02.zip /workspace/tools/platform-36_r02.zip sha1 2c1a80dd4d9f7d0e6dd336ec603d9b5c55a6f576
+if ! test -f /workspace/tools/android-platform-36/android-36/android.jar; then
+  mkdir -p /workspace/tools/android-platform-36
+  unzip -q /workspace/tools/platform-36_r02.zip -d /workspace/tools/android-platform-36
+fi

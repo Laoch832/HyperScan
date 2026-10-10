@@ -68,3 +68,7 @@ bash community/build.sh /workspace/artifacts/quark-original.apk /workspace/artif
 ## 社区源码范围
 
 本目录的新写修改脚本、构建代码和审计代码按仓库 MIT 许可证提供。原 APK、反编译产物与第三方 SDK 保存在外部工作目录，按原项目和依赖的授权管理。APK 不等于原项目的完整可维护源码；当前未发布远端开源仓库、Release 或网站。
+
+## 内部诊断版
+
+用户反馈 R2 在未登录状态下 PDF 页面加载失败。新增的[屏幕诊断提供器](diagnostics/README.md)用于记录安全摘要、调查网络与 verify 相关问题，不表示根因已确认或故障已修复。

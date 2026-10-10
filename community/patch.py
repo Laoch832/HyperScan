@@ -101,7 +101,7 @@ def encode8(value: int) -> bytes:
 def encode16(value: int) -> bytes:
     return struct.pack('<H', value) if value < 0x8000 else struct.pack('<HH', 0x8000 | (value >> 16), value & 0xffff)
 
-def rename_label(table: bytes) -> bytes:
+def rename_label(table: bytes, original_title: str = '夸克扫描王', title: str = '扫描社区测试版') -> bytes:
     root_type, root_header, root_size = struct.unpack_from('<HHI', table)
     if root_type != 2 or root_size != len(table):
         raise ValueError('Unexpected resource table.')
@@ -121,14 +121,13 @@ def rename_label(table: bytes) -> bytes:
                     length, offset = length8(chunk, offset)
                     value = chunk[offset:offset + length]
                     encoded = chunk[original_start:offset + length + 1]
-                    match = value == '夸克扫描王'.encode('utf-8')
+                    match = value == original_title.encode('utf-8')
                 else:
                     length, offset = length16(chunk, offset)
                     value = chunk[offset:offset + length * 2]
                     encoded = chunk[original_start:offset + length * 2 + 2]
-                    match = value == '夸克扫描王'.encode('utf-16le')
+                    match = value == original_title.encode('utf-16le')
                 if match:
-                    title = '扫描社区测试版'
                     utf16 = title.encode('utf-16le')
                     if flags & 0x100:
                         utf8 = title.encode('utf-8')

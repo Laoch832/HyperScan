@@ -79,3 +79,7 @@ python3 scripts/inspect-apk.py /workspace/artifacts/original.apk --output /works
 后续需据实际 APK 区分本地功能与内部 API 依赖；服务端限制不能仅靠修改本地界面解决。
 
 本项目 MIT 许可证只覆盖此处新写代码。依赖保留各自许可证；不包含原应用代码、图标、商标、SDK 或安装包。
+
+## 项目介绍页
+
+`docs/` 是独立的模块介绍网站，采用米白、暖橙和衬线字体，提供六个模块入口、交互工作流及测试版下载。GitHub Pages 使用 `.github/workflows/pages.yml` 部署，首次需仓库所有者在 Settings → Pages 选择 GitHub Actions。
