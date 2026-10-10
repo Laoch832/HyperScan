@@ -1,0 +1,3 @@
+f880594dacdc9c37707bd10aecde4a15cadbb0980be6c329efc73f61e25681b7  HyperScan-0.2.0-offline.apk
+cd644d9465e2c328fbb5af7e3415b95cd6b32c86ee2b18b449e80123cf46d3c5  HyperScan-Source.zip
+329e6802acc7f4d4b4d1a591bb8adf1833049360e1179287a33b4cb348cd6d82  HyperScan-0.2.0-offline.apk.validation.json

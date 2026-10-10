@@ -1,0 +1,43 @@
+{
+  "author": "Laoch832",
+  "edition": "independent-offline",
+  "package": "app.hyperscan.android",
+  "version": "0.2.0-offline",
+  "version_code": "2",
+  "apk_sha256": "f880594dacdc9c37707bd10aecde4a15cadbb0980be6c329efc73f61e25681b7",
+  "size_bytes": 24789497,
+  "network_permission": false,
+  "automatic_backup": false,
+  "debuggable": false,
+  "permissions": [
+    "app.hyperscan.android.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "packaged_ocr_files_sha256": {
+    "assets/public/ocr/lang/chi_sim.traineddata": "9784f7c917c546424b690fcde708ce1f604a4393d08bb51ddab146d7d7c794e6",
+    "assets/public/ocr/lang/eng.traineddata": "5dc5d8d640a212c9d6184921ba103b186f50e0fed9ee716c53e6b312b400d747",
+    "assets/public/ocr/worker.min.js": "576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d"
+  },
+  "packaged_wasm_variants": [
+    "assets/public/ocr/core/tesseract-core-lstm.wasm",
+    "assets/public/ocr/core/tesseract-core-relaxedsimd-lstm.wasm",
+    "assets/public/ocr/core/tesseract-core-relaxedsimd.wasm",
+    "assets/public/ocr/core/tesseract-core-simd-lstm.wasm",
+    "assets/public/ocr/core/tesseract-core-simd.wasm",
+    "assets/public/ocr/core/tesseract-core.wasm"
+  ],
+  "original_security_sdk_present": false,
+  "structural_checks_passed": true,
+  "android_device_tested": false,
+  "browser_tests_cover": [
+    "import",
+    "crop",
+    "rotate",
+    "enhance",
+    "local persistence",
+    "reorder",
+    "two-page image PDF",
+    "real OCR with external requests blocked",
+    "TXT",
+    "mobile dark mode"
+  ]
+}
