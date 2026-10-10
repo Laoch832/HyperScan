@@ -1,3 +1,3 @@
-ff6dc82346baf2f8e969a478818f5d67a3ce045451ac8831f5962ec99fcfe7fe  HyperScan-10.13.0.455-diagnostic-r4.apk
-046b5c58c854bb8e822bebe419ff7d9b97d6680fa46155833741bcc85d752c18  HyperScan-Source.zip
-895e94917c57ed7e42caccc2893c63ce5a1996317e2142ef3b531d58c5a3a64e  HyperScan-10.13.0.455-diagnostic-r4.apk.validation.json
+bd2f5bf1477bd8231e7c180c4665c64be147e24509cb7b94e34bc38d62048394  HyperScan-10.13.0.455-diagnostic-r5.apk
+68df7f15eaebeeb84c292d2d4103a0ce617eddbcdb246438522607aa6a14bc60  HyperScan-Source.zip
+f5ac388ce67ba7338da2e3a87531123d0dcb42c8f807f64ec68ed30a125eb547  HyperScan-10.13.0.455-diagnostic-r5.apk.validation.json
