@@ -1,0 +1,25 @@
+name: Publish HyperScan evidence diagnostic R4
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: release-inputs-diagnostic-r4
+          persist-credentials: false
+      - name: Verify diagnostic release inputs
+        run: |
+          cat apk.part-* > HyperScan-10.13.0.455-diagnostic-r4.apk
+          sha256sum --check RELEASE-SHA256SUMS.txt
+      - name: Publish diagnostic preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag=diagnostic-10.13.0.455-r4
+          gh release upload "$tag" HyperScan-10.13.0.455-diagnostic-r4.apk HyperScan-Source.zip HyperScan-10.13.0.455-diagnostic-r4.apk.validation.json RELEASE-SHA256SUMS.txt

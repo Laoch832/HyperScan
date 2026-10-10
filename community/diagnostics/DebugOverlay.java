@@ -23,8 +23,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayDeque;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /** Internal diagnostics by Laoch832. No requests, bodies, account data or raw logs are exported. */
 public final class DebugOverlay {
@@ -42,11 +40,11 @@ public final class DebugOverlay {
                 if (!started) {
                     started = true;
                     record("START — HyperScan 屏幕诊断 / Laoch832 / Android API " + android.os.Build.VERSION.SDK_INT);
-                    record("说明：仅显示归类后的本进程日志，不收集请求正文、令牌或原始日志；未出现日志不代表没有请求。");
+                    record("R4：保留本进程错误原文、标签、时间、线程及调用栈（脱敏）；不把 timeout 配置或 verify 提及直接判定为失败。");
                     activity.getApplication().registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
                         public void onActivityCreated(Activity a, Bundle b) {}
                         public void onActivityStarted(Activity a) {}
-                        public void onActivityResumed(Activity a) { schedule(a); }
+                        public void onActivityResumed(Activity a) { record("ACTIVITY — " + a.getClass().getName()); schedule(a); }
                         public void onActivityPaused(Activity a) {}
                         public void onActivityStopped(Activity a) {}
                         public void onActivitySaveInstanceState(Activity a, Bundle b) {}
@@ -65,7 +63,9 @@ public final class DebugOverlay {
                     } catch (Throwable error) { record("NETWORK_MONITOR — " + error.getClass().getSimpleName()); }
                     Thread.UncaughtExceptionHandler previous = Thread.getDefaultUncaughtExceptionHandler();
                     Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
-                        record("UNCAUGHT — " + error.getClass().getName());
+                        record("UNCAUGHT — " + LogSummary.redact(error.toString()));
+                        Throwable cause = error.getCause();
+                        for (int depth = 0; cause != null && depth < 4; depth++, cause = cause.getCause()) record("CAUSED_BY — " + LogSummary.redact(cause.toString()));
                         for (int i = 0; i < Math.min(error.getStackTrace().length, 8); i++) {
                             StackTraceElement frame = error.getStackTrace()[i];
                             record("  " + frame.getClassName() + "." + frame.getMethodName() + ":" + frame.getLineNumber());
@@ -75,9 +75,9 @@ public final class DebugOverlay {
                     });
                     Thread reader = new Thread(() -> {
                         try {
-                            Process process = new ProcessBuilder("/system/bin/logcat", "-v", "brief", "--pid=" + android.os.Process.myPid(), "-T", "1").redirectErrorStream(true).start();
+                            Process process = new ProcessBuilder("/system/bin/logcat", "-v", "threadtime", "--pid=" + android.os.Process.myPid(), "-T", "1").redirectErrorStream(true).start();
                             try (BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                                record("LOGCAT — 已启动本进程摘要读取；部分原生或未输出日志的请求无法捕获。");
+                                record("LOGCAT — 本进程 threadtime 日志已启动：时间 / PID / TID / 级别 / 标签 / 脱敏原文。未输出的请求无法捕获。");
                                 String line;
                                 while ((line = input.readLine()) != null) {
                                     String summary = LogSummary.summarize(line);
@@ -98,15 +98,15 @@ public final class DebugOverlay {
 
     private static synchronized void record(String message) {
         long now = System.currentTimeMillis();
-        if (message.equals(last) && now - lastAt < 2000) return;
+        // Retain repeated failures and stack frames; do not collapse distinct events.
         last = message; lastAt = now; count++;
         String timestamp = new java.text.SimpleDateFormat("HH:mm:ss", Locale.ROOT).format(new java.util.Date(now));
         EVENTS.addLast(timestamp + "  " + message);
-        while (EVENTS.size() > 180) EVENTS.removeFirst();
+        while (EVENTS.size() > 600) EVENTS.removeFirst();
     }
 
     private static synchronized String snapshot() {
-        StringBuilder output = new StringBuilder("HyperScan · Laoch832\n只含诊断摘要。请重现加载失败，再刷新或复制。\n\n");
+        StringBuilder output = new StringBuilder("HyperScan · Laoch832\nR4 脱敏原文日志。先点“开始重现”，关闭面板并触发失败，再打开复制。\n\n");
         for (String event : EVENTS) output.append(event).append('\n');
         return output.toString();
     }
@@ -138,10 +138,10 @@ public final class DebugOverlay {
         ScrollView scroll = new ScrollView(a); scroll.addView(text);
         AlertDialog dialog = new AlertDialog.Builder(a).setTitle("HyperScan 内部诊断 · Laoch832")
             .setView(scroll).setPositiveButton("关闭", (d, which) -> {})
-            .setNegativeButton("复制摘要", (d, which) -> {
+            .setNegativeButton("复制日志", (d, which) -> {
                 ClipboardManager clipboard = (ClipboardManager) a.getSystemService(Context.CLIPBOARD_SERVICE);
                 clipboard.setPrimaryClip(ClipData.newPlainText("HyperScan diagnostics", snapshot()));
-            }).setNeutralButton("清空", (d, which) -> { synchronized (DebugOverlay.class) { EVENTS.clear(); last = ""; } }).create();
+            }).setNeutralButton("开始重现", (d, which) -> { synchronized (DebugOverlay.class) { EVENTS.clear(); last = ""; record("REPRO_START — 用户开始重现问题"); } }).create();
         dialog.show();
         scroll.getLayoutParams().height = dp(a, 380); scroll.requestLayout();
         Runnable refresh = new Runnable() {

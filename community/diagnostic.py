@@ -43,7 +43,7 @@ def pack(base, dex_dir, output):
         new.writestr('classes13.dex', (dex_dir/'classes13.dex').read_bytes())
         new.writestr('assets/hyperscan-diagnostics.json', json.dumps({
             'author': 'Laoch832', 'source_preview_sha256': BASE_SHA, 'runtime_tested': False,
-            'provider': 'in-process logcat classifications, connectivity and uncaught exception class/frames',
+            'provider': 'redacted own-process threadtime messages and stack traces, connectivity and exception causes',
             'raw_logs_or_payloads_exported': False, 'tls_or_server_verification_modified': False,
         }, ensure_ascii=False, indent=2))
 
