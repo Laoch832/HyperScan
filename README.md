@@ -2,6 +2,8 @@
 
 社区扫描项目：包含独立扫描原型，以及获得用户授权的 Android 客户端修改、构建和审计工具。
 
+测试版下载见 [GitHub Releases](https://github.com/Laoch832/HyperScan/releases/tag/community-preview-10.13.0.455)。
+
 原 APK 的社区测试包通过了签名和静态审计，尚未实机测试；云端功能仍需要服务端配额。详见 [社区测试版说明](community/README.md)。
 
 # PaperScan Community · 扫描社区版原型
