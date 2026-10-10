@@ -1,12 +1,14 @@
 # HyperScan
 
+作者与维护者：[Laoch832](https://github.com/Laoch832) · [项目主页](https://laoch832.github.io/HyperScan/)
+
 社区扫描项目：包含独立扫描原型，以及获得用户授权的 Android 客户端修改、构建和审计工具。
 
 测试版下载见 [GitHub Releases](https://github.com/Laoch832/HyperScan/releases/tag/community-preview-10.13.0.455)。
 
 原 APK 的社区测试包通过了签名和静态审计，尚未实机测试；云端功能仍需要服务端配额。详见 [社区测试版说明](community/README.md)。
 
-# PaperScan Community · 扫描社区版原型
+# HyperScan · Laoch832 · 扫描社区版原型
 
 仓库包含两部分：已验证的独立 Web 扫描原型，以及后来基于授权 APK 编写的社区客户端修改、重建与审计工具。原包现已下载、校验并分析。请先阅读 [客户端社区测试版说明](community/README.md)，查看实际 APK 改动与实机验证限制。
 

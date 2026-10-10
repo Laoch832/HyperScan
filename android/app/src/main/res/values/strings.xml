@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">扫描社区版</string>
-    <string name="title_activity_main">扫描社区版</string>
+    <string name="app_name">HyperScan</string>
+    <string name="title_activity_main">HyperScan</string>
     <string name="package_name">org.paperscan.community</string>
     <string name="custom_url_scheme">org.paperscan.community</string>
 </resources>

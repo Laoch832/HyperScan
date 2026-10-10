@@ -42,7 +42,7 @@ PY
 fi
 if test ! -f "$signing_dir/development.p12"; then
   keytool -genkeypair -noprompt -storetype PKCS12 -alias community-development -keyalg RSA -keysize 2048 -validity 10000 \
-    -dname 'CN=Community Development, O=PaperScan' -keystore "$signing_dir/development.p12" \
+    -dname 'CN=Laoch832 Community Development, O=HyperScan' -keystore "$signing_dir/development.p12" \
     -storepass:file "$signing_dir/password" -keypass:file "$signing_dir/password"
   chmod 600 "$signing_dir/development.p12"
 fi

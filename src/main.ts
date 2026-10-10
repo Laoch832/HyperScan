@@ -35,7 +35,7 @@ function render(): void {
   const visible = documents.filter(doc => doc.name.toLowerCase().includes(search.toLowerCase()));
   app.innerHTML = `
     <aside class="sidebar">
-      <a class="brand" href="#" aria-label="PaperScan 首页"><span class="brand-mark">${icon('scan')}</span><span>PaperScan<small>COMMUNITY EDITION</small></span></a>
+      <a class="brand" href="#" aria-label="HyperScan 首页"><span class="brand-mark">${icon('scan')}</span><span>HyperScan<small>COMMUNITY EDITION</small></span></a>
       <button class="new-document primary" data-action="new">${icon('plus')} 新建扫描</button>
       <div class="nav active">${icon('folder')} 我的文档 <span>${documents.length}</span></div>
       <div class="sidebar-bottom">${icon('shield')}<div>文档留在你的设备上<small>本地处理 · 自由使用</small></div></div>
@@ -61,7 +61,7 @@ function render(): void {
         </aside>
       </section>
       <section class="library"><div class="library-heading"><h2>最近文档 <span>${documents.length}</span></h2><label class="search"><span>⌕</span><input id="search" placeholder="搜索文档名称" aria-label="搜索文档" value="${escape(search)}" /></label></div><div class="document-grid">${visible.length ? visible.map(doc => `<article class="document-card"><button data-open="${doc.id}" class="document-cover" aria-label="打开 ${escape(doc.name)}"><img src="${doc.pages[0]?.image ?? ''}" alt="" /><span>${doc.pages.length} 页</span></button><div class="document-meta"><button data-open="${doc.id}">${escape(doc.name)}</button><button data-delete="${doc.id}" class="icon-button danger" aria-label="删除 ${escape(doc.name)}">${icon('trash')}</button><small>${new Date(doc.updatedAt).toLocaleDateString('zh-CN')}</small></div></article>`).join('') : `<div class="empty-library">${icon('folder')}<span>${search ? '没有匹配的文档' : '保存的文档会出现在这里'}</span></div>`}</div></section>
-      <footer>PaperScan Community <span>·</span> 自由扫描，清晰记录。</footer>
+      <footer>HyperScan · Laoch832 <span>·</span> 由 Laoch832 创作与维护。</footer>
     </main>
     <input class="sr-only" id="file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple />
     <input class="sr-only" id="camera-input" type="file" accept="image/*" capture="environment" />

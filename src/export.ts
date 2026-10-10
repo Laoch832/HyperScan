@@ -15,7 +15,7 @@ export async function createPdf(doc: ScanDocument): Promise<Blob> {
     const width = image.width * ratio, height = image.height * ratio;
     pdf.addImage(page.image, 'JPEG', (210 - width) / 2, (297 - height) / 2, width, height);
   }
-  pdf.setProperties({ title: doc.name, creator: 'PaperScan Community' });
+  pdf.setProperties({ title: doc.name, creator: 'HyperScan · Laoch832' });
   return pdf.output('blob');
 }
 
