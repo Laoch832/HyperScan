@@ -1,0 +1,3 @@
+c0dd4201e7232abadcf0bff5a37d5b7ae72be2fab35606150b3d2fd235cbc852  QuarkScan-Community-10.13.0.455-preview-r2.apk
+689a0ecb94003f407bf98687dbe5bd269c75f7b319aad9b07e6e4fafda6ad011  HyperScan-Source.zip
+2fb1ba6e7f0c217f62c00c875ea1777e053d8f9517cdfbd75a236c66e5e1e75f  QuarkScan-Community-10.13.0.455-preview-r2.apk.validation.json
