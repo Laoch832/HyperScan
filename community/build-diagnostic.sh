@@ -10,7 +10,9 @@ test ! -e "$output" || { echo 'Choose a new output path.' >&2; exit 1; }
 work=$(mktemp -d /workspace/artifacts/hyperscan-diagnostic.XXXXXX)
 echo "Build directory: $work"
 python3 "$project_dir/community/diagnostic.py" prepare "$decoded" "$work/smali_classes9"
-java -Xmx4g --class-path /workspace/tools/apktool_3.0.3.jar "$project_dir/community/AssembleDex.java" "$work/smali_classes9" "$work/classes9.dex"
+for number in 8 9 11; do
+  java -Xmx4g --class-path /workspace/tools/apktool_3.0.3.jar "$project_dir/community/AssembleDex.java" "$work/smali_classes$number" "$work/classes$number.dex"
+done
 platform=/workspace/tools/android-platform-36/android-36/android.jar
 test -f "$platform"
 java "$project_dir/community/CompileJava.java" "$platform" "$work/classes" "$project_dir"/community/diagnostics/*.java

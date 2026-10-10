@@ -40,7 +40,7 @@ public final class DebugOverlay {
                 if (!started) {
                     started = true;
                     record("START — HyperScan 屏幕诊断 / Laoch832 / Android API " + android.os.Build.VERSION.SDK_INT);
-                    record("R4：保留本进程错误原文、标签、时间、线程及调用栈（脱敏）；不把 timeout 配置或 verify 提及直接判定为失败。");
+                    record("R5：增加 STS 解密结果及安全组件异常码；保留本进程错误原文、标签、时间、线程及调用栈（脱敏）；不把 timeout 配置或 verify 提及直接判定为失败。");
                     activity.getApplication().registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
                         public void onActivityCreated(Activity a, Bundle b) {}
                         public void onActivityStarted(Activity a) {}
@@ -106,7 +106,7 @@ public final class DebugOverlay {
     }
 
     private static synchronized String snapshot() {
-        StringBuilder output = new StringBuilder("HyperScan · Laoch832\nR4 脱敏原文日志。先点“开始重现”，关闭面板并触发失败，再打开复制。\n\n");
+        StringBuilder output = new StringBuilder("HyperScan · Laoch832\nR5 STS 结果与脱敏原文日志。先点“开始重现”，关闭面板并触发失败，再打开复制。\n\n");
         for (String event : EVENTS) output.append(event).append('\n');
         return output.toString();
     }
