@@ -1,0 +1,10 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+android/.gradle/
+android/local.properties
+android/**/build/
+.DS_Store
+public/ocr/
+**/__pycache__/
