@@ -115,10 +115,10 @@ report = {
     'structural_checks_passed': True, 'android_device_tested': False,
     'native_core_sha256': native_manifest['libraries'],
     'native_dependencies': native_dependencies, 'jni_registration_methods_verified': sum(map(len, registration.values())),
-    'migrated_paths': ['QuarKit imagePerspective', 'PicturesPDFExportAndroidImp local drawing path'],
-    'not_migrated': ['automatic edge models', 'original OCR models', 'original intelligent enhancement models'],
+    'migrated_paths': ['QuarKit imagePerspective', 'PicturesPDFExportAndroidImp local drawing path', 'original RGB classifier / four-corner model integration'],
+    'not_migrated': ['six-point book / curved page correction', 'original OCR models', 'original intelligent enhancement models'],
     'browser_tests_cover': ['import', 'crop', 'rotate', 'enhance', 'local persistence', 'reorder',
-                            'two-page image PDF', 'real OCR with external requests blocked', 'TXT', 'mobile dark mode'],
+                            'two-page image PDF', 'real OCR with external requests blocked', 'TXT', 'mobile dark mode', 'live camera frames / continuous capture / permission refusal', 'batch import / shadow cleanup / adaptive black-white / source recovery'],
 }
 args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
 print(json.dumps(report, ensure_ascii=False, indent=2))
