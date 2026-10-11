@@ -4,7 +4,7 @@
 
 用户要求保留原扫描 APK 的本地核心处理能力，移除依赖服务器的功能，以保留下来的核心改造 UI 或迁移进 HyperScan。0.2.0 的独立 Web 扫描原型没有完成该迁移，不能作为原扫描软件核心保留版验收。
 
-原 APK SHA256：`3e6a468befdd9c0808c319f25a2e5d1fc701b38fc5bd4870f573a5d4f826596e`。分析产物保留在仓库外；不把反编译源码自动声明为本仓库 MIT 代码。
+原 APK SHA256：`3e6a468befdd9c0808c319f25a2e5d1fc701b38fc5bd4870f566a5d4f826596e`。分析产物保留在仓库外；不把反编译源码自动声明为本仓库 MIT 代码。
 
 ## 已检查的实际入口
 
@@ -32,3 +32,9 @@
 原启动任务 `InitLoadQuarkitTask` 调用 `j71.f`；它内置 arm64 默认包大小5058474、MD5 `e488477c1db50841985b7e7635893030`、2022-04-24下载地址。实际取得文件匹配这些值，另固定 SHA256 `2bc274afe459e118bac113a9f8377397d68c042ff81af97e930dff3f1ad25fa0`。解出 tbb/opencv/upipe/quarkit，加入原 APK 的 MNN、C++运行库，六库摘要见 native-manifest.json。运行时不需要网络获取。这个默认包不等于已验证用户设备当前缓存的最新库。
 
 原自动找边 `JsApiImageEdgeDetector.g` 转入 Wama `runImageAlgo`，配置和模型不在已确认资源中。原 OCR `UncommonOCRDetector` 先准备 `DownloadData.ModelInfo`，再将模型路径传入 `DuGuangOCR.init`，RGB像素交给 nativeDetect。当前未取得对应模型/清单，不能用任意模型冒充可用资源。
+
+## 0.5.0 更新与纠正
+
+此前只追到Wama动态入口，遗漏原APK内置的 `assets/walle/common_multi_detect`。现从该目录取得原分类、四角、六点模型，按同目录walle_config.json的MD5校验，再记录SHA256并随包打入，不在运行时下载。原worker静态字节码确认分类RGB224/mean0.5/std0.5，四角RGB416/padding8/mean0.442/std0.281以及padding坐标反变换。当前分类+四角使用原APK的MNN、mnnkitcore和25项AliNN JNI接口；六点曲面任务没有接入。
+
+新增实时检测框、稳定后自动拍摄、拍后/批量导入自动找边及原透视校正。原模型初始化/推理不兼容则记录异常，明确使用HyperScan本地轮廓回退；无检测结果不生成伪装四角。该回退在5项Java算法测试中通过，但原定制MNN推理仍待Android真机验证；不能把回退通过写成原模型通过。公开主机MNN不支持原定制格式，原模型不做格式/校验绕过。

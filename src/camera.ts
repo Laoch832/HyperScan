@@ -2,9 +2,9 @@ import { Capacitor, registerPlugin } from '@capacitor/core';
 interface CameraPlugin { open(): Promise<{ count: number }>; read(options: { index: number }): Promise<{ image: string }>; release(): Promise<void> }
 const nativeCamera = registerPlugin<CameraPlugin>('ScanCamera');
 /** Feed each captured page to the same editing pipeline as imported images. */
-export async function scanCamera(add: (image: string) => void): Promise<void> {
+export async function scanCamera(add: (image: string) => Promise<void>): Promise<void> {
   if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
-    try { const { count } = await nativeCamera.open(); for (let index = 0; index < count; index++) add((await nativeCamera.read({ index })).image); }
+    try { const { count } = await nativeCamera.open(); for (let index = 0; index < count; index++) await add((await nativeCamera.read({ index })).image); }
     finally { await nativeCamera.release(); }
     return;
   }
@@ -16,18 +16,20 @@ export async function scanCamera(add: (image: string) => void): Promise<void> {
   const shutter = dialog.querySelector<HTMLButtonElement>('[data-shutter]')!;
   const status = dialog.querySelector('p')!;
   const done = dialog.querySelector<HTMLButtonElement>('[data-done]')!;
-  let stream: MediaStream | undefined, closed = false, count = 0;
+  let stream: MediaStream | undefined, closed = false, count = 0, processing = false, pendingClose = false;
   let finish!: () => void; const finished = new Promise<void>(resolve => { finish = resolve; });
-  const close = () => { closed = true; stream?.getTracks().forEach(track => track.stop()); dialog.close(); finish(); };
+  const close = () => { if (processing) { pendingClose = true; stream?.getTracks().forEach(track => track.stop()); return; } closed = true; stream?.getTracks().forEach(track => track.stop()); dialog.close(); finish(); };
   dialog.querySelector('[data-close]')!.addEventListener('click', close); done.addEventListener('click', close);
   dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
   const visibility = () => { if (document.hidden) close(); }; document.addEventListener('visibilitychange', visibility);
-  shutter.onclick = () => {
+  shutter.onclick = async () => {
     if (video.readyState < 2 || !video.videoWidth || closed) return;
     const scale = Math.min(1, 2400 / Math.max(video.videoWidth, video.videoHeight));
     const canvas = document.createElement('canvas'); canvas.width = Math.round(video.videoWidth * scale); canvas.height = Math.round(video.videoHeight * scale);
     canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height);
-    add(canvas.toDataURL('image/jpeg', 0.92)); count++; done.textContent = `完成 · ${count} 页`; status.textContent = `已拍 ${count} 页 · 可继续拍摄`; if (count >= 20) shutter.disabled = true;
+    shutter.disabled = true; processing = true; done.disabled = true;
+    try { await add(canvas.toDataURL('image/jpeg', 0.92)); } catch { status.textContent = '页面添加失败，请重试'; shutter.disabled = false; return; } finally { processing = false; done.disabled = false; if (pendingClose) close(); }
+    shutter.disabled = false; count++; done.textContent = `完成 · ${count} 页`; status.textContent = `已拍 ${count} 页 · 可继续拍摄`; if (count >= 20) shutter.disabled = true;
   };
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });

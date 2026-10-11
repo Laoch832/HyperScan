@@ -1,5 +1,6 @@
 import './style.css';
 import { scanCamera } from './camera';
+import { prepareScan } from './scan-pipeline';
 import { defaultEdit, readPhoto, renderPhoto, type Edit } from './image';
 import { listDocuments, saveDocument, removeDocument, type ScanDocument, type Page } from './storage';
 import { exportPdf, exportFile } from './export';
@@ -15,6 +16,7 @@ let dirty = false;
 let search = '';
 let notice = '';
 let canCorrect = false;
+let autoCorrect = localStorage.getItem("hyperscan-auto-correct") !== "false";
 let workingCorners: Corners = fullCorners();
 const escape = (value: string) => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]!));
 function freshDocument(): ScanDocument { return { id: crypto.randomUUID(), name: '未命名文档', updatedAt: Date.now(), pages: [] }; }
@@ -45,7 +47,7 @@ function render(): void {
       <div class="sidebar-bottom">${icon('shield')}<div>文档留在你的设备上<small>本地处理 · 自由使用</small></div></div>
     </aside>
     <main>
-      <header><span class="breadcrumb">工作空间 <span>/</span> 我的文档</span><span class="edition">实时相机测试 0.4</span></header>
+      <header><span class="breadcrumb">工作空间 <span>/</span> 我的文档</span><span class="edition">自动扫描测试 0.5</span></header>
       <section class="heading"><div><p class="eyebrow">MAKE ROOM FOR YOUR IDEAS</p><h1>纸张，变成可能。</h1><p class="subtitle">拍摄、编辑、识字、导出。每一步，都在你的设备上。</p></div><div class="local-badge"><span></span> 无需联网</div></section>
       <section class="workspace">
         <div class="editor-panel">
@@ -54,11 +56,13 @@ function render(): void {
             ${page ? `<img src="${page.image}" alt="当前文档第 ${current.pages.indexOf(page) + 1} 页" />` : `<div class="empty-preview"><div class="paper-illustration"><span></span><span></span><span></span><span></span><div>${icon('scan')}</div></div><h2>扫描你的第一份文档</h2><p>拍摄纸张，或导入现有图片<br>支持 JPEG、PNG 和 WebP</p><button class="primary" data-action="import">${icon('image')} 导入图片</button><button class="text-button" data-action="camera">${icon('camera')} 用相机拍摄</button></div>`}
           </div>
           ${current.pages.length ? `<div class="page-strip">${current.pages.map((item, index) => `<button class="thumbnail ${item.id === selectedId ? 'selected' : ''}" data-page="${item.id}" aria-label="选择第 ${index + 1} 页"><img src="${item.image}" alt="" /><span>${index + 1}</span></button>`).join('')}<button class="add-page" data-action="import" aria-label="添加页面">${icon('plus')}</button></div>` : ''}
+          ${page?.scanMessage ? `<p class="scan-result" role="note">${escape(page.scanMessage)}</p>` : page?.scanEngine ? `<p class="scan-result">${page.scanEngine === 'original-mnn-four-corner' ? '原模型找边' : '本地轮廓找边'} · ${page.corrected ? '已拉正 · ' : ''}原图保留</p>` : ''}
           <div class="editor-footer"><span>${icon('shield')} 图片与文字均在本地处理</span><button class="primary" data-action="pdf" ${!current.pages.length ? 'disabled' : ''}>${icon('pdf')} 导出 PDF</button></div>
         </div>
         <aside class="tools-panel"><div class="tools-heading"><h2>文档工具</h2><span>随手整理，轻松导出</span></div>
           <div class="tool-grid"><button data-action="camera">${icon('camera')}<span>拍摄文档</span></button><button data-action="import">${icon('image')}<span>导入图片</span></button></div>
-          <div class="tool-section"><h3>图像增强</h3><div class="filters">${([['original', '原图'], ['gray', '灰度'], ['document', '清晰文档']] as const).map(([value, label]) => `<button data-filter="${value}" class="${page?.edit.filter === value ? 'chosen' : ''}" ${!page ? 'disabled' : ''}><span class="filter-sample ${value}" aria-hidden="true">Aa</span>${label}</button>`).join('')}</div></div>
+          <div class="tool-section"><label class="scan-toggle"><input id="auto-correct" type="checkbox" ${autoCorrect ? 'checked' : ''} /> 自动找边并拉正</label><p class="hint">Android 拍摄及批量导入自动处理，检测失败保留原图。可关闭并手动调整。</p><button data-action="auto-detect" ${!page || !canCorrect ? 'disabled' : ''}>重新找边并拉正</button></div>
+          <div class="tool-section"><h3>图像增强</h3><div class="filters">${([['original', '原图'], ['gray', '灰度'], ['document', '对比增强'], ['clean', '去阴影'], ['bw', '黑白']] as const).map(([value, label]) => `<button data-filter="${value}" class="${page?.edit.filter === value ? 'chosen' : ''}" ${!page ? 'disabled' : ''}><span class="filter-sample ${value}" aria-hidden="true">Aa</span>${label}</button>`).join('')}</div></div>
           <div class="tool-section"><h3>调整页面</h3><div class="tool-grid compact"><button data-action="crop" ${!page ? 'disabled' : ''}>${icon('scan')}<span>裁剪边缘</span></button><button data-action="rotate" ${!page ? 'disabled' : ''}>${icon('rotate')}<span>旋转 90°</span></button><button data-action="perspective" ${!page || !canCorrect ? 'disabled' : ''}>${icon('scan')}<span>四角校正</span></button><button data-action="reset-page" ${!page ? 'disabled' : ''}><span>恢复原图</span></button></div>${!canCorrect ? '<p class="hint">四角校正在 Android 版中提供。</p>' : ''}<div class="reorder"><button data-action="previous" ${!page || current.pages.indexOf(page) === 0 ? 'disabled' : ''}>← 前移</button><button data-action="next" ${!page || current.pages.indexOf(page) === current.pages.length - 1 ? 'disabled' : ''}>后移 →</button><button data-action="remove-page" class="danger" ${!page ? 'disabled' : ''} aria-label="删除当前页">${icon('trash')}</button></div></div>
           <div class="tool-section pdf-settings"><h3>PDF 页面</h3><label>纸张<select id="pdf-paper">${(['a4', 'a5', 'letter'] as const).map(value => `<option value="${value}" ${(current.pdf ?? defaultPdfSettings()).paper === value ? 'selected' : ''}>${value.toUpperCase()}</option>`).join('')}</select></label><label>方向<select id="pdf-orientation">${([['auto', '跟随每页图片'], ['portrait', '纵向'], ['landscape', '横向']] as const).map(([value, text]) => `<option value="${value}" ${(current.pdf ?? defaultPdfSettings()).orientation === value ? 'selected' : ''}>${text}</option>`).join('')}</select></label><label>边距 %<input id="pdf-margin" type="number" min="0" max="20" step="1" value="${Math.round((current.pdf ?? defaultPdfSettings()).margin * 100)}" /></label></div>
           <div class="tool-section"><h3>文字识别 <span class="small-tag">中 / EN</span></h3><button class="ocr-button" data-action="ocr" ${!page ? 'disabled' : ''}>${icon('text')} 识别当前页文字 <span>↗</span></button><p class="hint">使用设备上的 OCR 引擎。首次加载可能稍慢。</p>${page?.text ? `<label class="sr-only" for="recognized-text">识别结果</label><textarea id="recognized-text" rows="6">${escape(page.text)}</textarea><button class="text-button" data-action="text">导出全部文字 .txt</button>` : ''}</div>
@@ -97,10 +101,11 @@ async function editPage(change: (edit: Edit) => void): Promise<void> {
   const edit = structuredClone(page.edit); change(edit);
   const corrected = edit.corners ? (page.corrected && JSON.stringify(page.edit.corners) === JSON.stringify(edit.corners) ? page.corrected : await correctOriginal(page.original, edit.corners)) : undefined;
   const image = await renderPhoto(corrected ?? page.original, { ...edit, corners: undefined });
-  page.edit = edit; page.image = image; page.corrected = corrected; page.text = ''; dirty = true;
+  page.edit = edit; page.image = image; page.corrected = corrected; page.text = ''; if (corrected && edit.corners) delete page.scanMessage; dirty = true;
 }
 function safeSwitch(): boolean { return !dirty || confirm('当前文档尚未保存。是否放弃这些更改？'); }
 function bindEvents(): void {
+  document.querySelector('#auto-correct')?.addEventListener('change', event => { autoCorrect = (event.target as HTMLInputElement).checked; localStorage.setItem('hyperscan-auto-correct', String(autoCorrect)); });
   for (const id of ['pdf-paper', 'pdf-orientation', 'pdf-margin']) document.querySelector(`#${id}`)?.addEventListener('change', () => {
     current.pdf = { paper: document.querySelector<HTMLSelectElement>('#pdf-paper')!.value as PdfSettings['paper'], orientation: document.querySelector<HTMLSelectElement>('#pdf-orientation')!.value as PdfSettings['orientation'], margin: Number(document.querySelector<HTMLInputElement>('#pdf-margin')!.value) / 100 };
     dirty = true;
@@ -116,7 +121,7 @@ function bindEvents(): void {
     if (files.length) void run(async () => {
       showNotice('正在导入图片…');
       const pages: Page[] = [];
-      for (const file of files) { const image = await readPhoto(file); pages.push({ id: crypto.randomUUID(), original: image, image, edit: defaultEdit(), text: '' }); }
+      for (const file of files) { const image = await readPhoto(file); const result = await prepareScan(image, autoCorrect); pages.push(result.page); if (result.message) showNotice(result.message); }
       current.pages.push(...pages); selectedId = pages[0].id; dirty = true; showNotice(`已导入 ${pages.length} 页，请保存文档。`);
     });
   });
@@ -131,9 +136,10 @@ function bindEvents(): void {
     if (action === 'import') { document.querySelector<HTMLInputElement>('#file-input')!.click(); return; }
     if (action === 'camera') { void run(async () => {
       let count = 0;
-      await scanCamera(image => {
-        const id = crypto.randomUUID(); current.pages.push({ id, original: image, image, edit: defaultEdit(), text: '' });
-        selectedId = id; dirty = true; count++;
+      await scanCamera(async image => {
+        const result = await prepareScan(image, autoCorrect); current.pages.push(result.page);
+        selectedId = result.page.id; dirty = true; count++;
+        if (result.message) showNotice(result.message);
       });
       showNotice(count ? `已拍摄 ${count} 页，可继续校正、编辑并保存。` : '已返回编辑，没有添加照片。');
     }); return; }
@@ -145,7 +151,8 @@ function bindEvents(): void {
     void run(async () => {
       if (action === 'save') { await save(); showNotice('文档已保存到本机。'); }
       if (action === 'pdf') { showNotice('正在本地生成 PDF…'); await exportPdf(current, current.pdf ?? defaultPdfSettings()); showNotice('PDF 已导出。'); }
-      if (action === 'reset-page') { await editPage(edit => { Object.assign(edit, defaultEdit()); delete edit.corners; }); showNotice('已恢复原图。'); }
+      if (action === 'auto-detect') { const page = selected(); if (page) { showNotice('正在本地找边并拉正…'); const result = await prepareScan(page.original, true); if (result.page.corrected) { page.scanEngine = result.page.scanEngine; page.scanMessage = result.page.scanMessage; page.edit = result.page.edit; page.corrected = result.page.corrected; page.image = result.page.image; page.text = ''; dirty = true; } showNotice(result.message ?? '自动找边及拉正完成，原图已保留。'); } }
+      if (action === 'reset-page') { const original = selected(); if (original) { delete original.scanEngine; delete original.scanMessage; } await editPage(edit => { Object.assign(edit, defaultEdit()); delete edit.corners; }); showNotice('已恢复原图。'); }
       if (action === 'rotate') { await editPage(edit => { edit.rotation = (edit.rotation + 90) % 360; }); showNotice('页面已旋转。'); }
       if (action === 'remove-page') { const index = current.pages.findIndex(page => page.id === selectedId); current.pages.splice(index, 1); selectedId = current.pages[Math.min(index, current.pages.length - 1)]?.id ?? ''; dirty = true; showNotice('页面已移除，保存后生效。'); }
       if (action === 'previous' || action === 'next') { const index = current.pages.findIndex(page => page.id === selectedId); const to = index + (action === 'previous' ? -1 : 1); if (index >= 0 && to >= 0 && to < current.pages.length) { [current.pages[index], current.pages[to]] = [current.pages[to], current.pages[index]]; dirty = true; } }

@@ -1,6 +1,6 @@
 import type { Edit } from './image';
 import type { PdfSettings } from './original-core';
-export type Page = { id: string; original: string; image: string; edit: Edit; text: string; corrected?: string };
+export type Page = { scanEngine?: string; scanMessage?: string; id: string; original: string; image: string; edit: Edit; text: string; corrected?: string };
 export type ScanDocument = { id: string; name: string; updatedAt: number; pages: Page[]; pdf?: PdfSettings };
 const openDatabase = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
   const request = indexedDB.open('hyperscan-offline', 1);

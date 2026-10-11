@@ -1,32 +1,21 @@
-# HyperScan · 原扫描核心迁移
+# HyperScan · 本地扫描核心迁移
 
-作者与维护者：[Laoch832](https://github.com/Laoch832) · [官网](https://laoch832.github.io/HyperScan/) · [核心迁移测试包](https://github.com/Laoch832/HyperScan/releases/tag/camera-preview-0.4.0)
+作者与维护者：[Laoch832](https://github.com/Laoch832) · [官网](https://laoch832.github.io/HyperScan/) · [下载 0.5.0 自动扫描版](https://github.com/Laoch832/HyperScan/releases/tag/auto-scan-0.5.0)
 
-目标是保留原扫描软件可本地运行的核心能力，拆除云端依赖，再迁移到采用 Material 3 Expressive 界面的 HyperScan。包名 `app.hyperscan.android`，没有网络权限、登录、会员、STS 上传、CMS 拉取、云同步和远程转换。**0.3.0 是第一批核心迁移测试包，不是全部核心已经迁移完成的版本。**此前 0.2.0 属于独立扫描原型，不符合原核心保留目标。
+保留原扫描软件可本地运行的核心，删除云端依赖，再接入 Material 3 Expressive 界面。包名 `app.hyperscan.android`，无网络权限、账号、会员、STS、CMS、云同步或远程转换。0.2.0 是被用户否定的独立原型；后续沿用原图像处理与PDF迁移路径。
 
-## 0.4.0 应用内实时扫描相机
+## 0.5.0 扫描流程
 
-点击“拍摄文档”直接进入应用内 CameraX 实时取景，不再跳转系统相机。支持后置相机、点击对焦、补光、连续拍摄（单次20页），完成/返回将已拍页面加入当前文档，原图保留并接入校正、编辑、识字及PDF路径。相机权限按需请求；无需联网或相册读写权限。临时JPEG在页面读取后清理，退出相机释放硬件。取景保持原始宽高比；当前不提供自动找边。
+- 应用内 CameraX 实时取景、后置相机、点击对焦、补光和连续拍摄。实时边框来自实际检测；没有检测结果时不画固定“识别框”。自动拍摄开关：连续稳定后拍摄，等纸张离开或明显移动后再允许下一次，避免同一静止页不断拍摄。
+- 原 APK `assets/walle/common_multi_detect` 内置分类、四角和六点模型现已找到并校验打包。之前“原自动找边模型不在已确认资源中”的结论遗漏了该资产目录，已更正。当前执行原分类与四角模型，按原 worker 的 RGB、224/416、8像素padding、均值/标准差和坐标映射准备输入/输出。六点模型随包保留，当前不执行书籍曲面/六点拉正。
+- 原模型加载/输出异常时记录真实错误，改用明确命名的 HyperScan 本地轮廓检测。相机及页面显示使用的是原模型还是本地轮廓；回退不冒充原算法。轮廓检测不需要模型或网络。
+- 拍摄与批量导入默认自动找边并调用原 `QuarKitUtil.imagePerspective` 拉正；可关闭自动处理，也可重新找边、手动调整四角。检测不可靠或校正失败时保留完整原图，并显示该页的具体状态，不强行裁剪。
+- 原图一直保留；可恢复原图、裁剪、旋转、灰度、对比增强、去阴影、自适应黑白、多页排序、本地文档保存、中文/英文 OCR、TXT 及 PDF 导出。去阴影/黑白是 HyperScan 的本地实现；OCR 是随包 Tesseract，均不宣称是原模型迁移成果。
+- 原 `PicturesPDFExportAndroidImp` 的本地 Android PdfDocument 绘制路径：A4/A5/Letter、按每页图片方向自动横竖页、边距、居中等比缩放和系统文件保存面板。
 
-浏览器使用 getUserMedia 实时视频与本地帧捕获，返回/隐藏页面停止媒体流；需要 HTTPS 或 localhost。浏览器测试用 Chromium 模拟摄像头验证连续两页、取景尺寸、返回后停止轨道与权限拒绝；不等于 Android 真机验证。Android相机日志标签为 `HyperScanCamera`。
+Android arm64-v8a，最低API24，可覆盖更新同签名HyperScan；不迁移原包/R5文档。相机权限按需请求，无相册读写权限。浏览器保持实时视频拍摄、编辑/OCR/PDF；原模型找边、自动拉正与实时边框目前在Android提供。
 
-## 本次实际接入
-
-- 原 `JsApiImageEdgeDetector.j` 的本地透视分支：保留原 JNI 类名，调用 `QuarKitUtil.imagePerspective`；原程序内置默认动态库及依赖随 APK 打包，运行时不下载。四个角由用户拖动或用方向键调整。没有用自写透视算法代替原实现。
-- 原 `PicturesPDFExportAndroidImp` 本地绘制路径：迁移 Android `PdfDocument`、按单页图片方向选择横竖页、百分比边距和居中等比缩放；去掉 CMS、统计、权限服务和云端预览的外围依赖。支持 A4/A5/Letter、自动/横向/纵向、0–20% 边距，通过系统文件保存面板导出。
-- 校正、裁剪、旋转保持原图；可恢复原图。校正结果缓存，后续滤镜操作不重复调用原生校正。失败不覆盖当前页，PDF 遇到坏页直接报错，不默默漏页。
-
-原 QuarKit 库是原 APK 内置下载配置 `j71.f` 指向的 2022-04-24 默认资源，并非从用户设备当前缓存取得的最新版本。下载包与原配置的大小/MD5匹配，另外固定 SHA256；六个库、73 个 JNI 注册签名和非系统库依赖均审计。它们按原组件授权管理，不自动变成 MIT 源码。来源、摘要及迁移范围见 [核心迁移记录](community/CORE-MIGRATION.md) 和 [资源清单](community/core/native-manifest.json)。
-
-## 保留的工作空间与尚未迁移的核心
-
-拍照/图片导入、多页排序、本机文档库、矩形裁剪、旋转、灰度和对比度增强、中文/英文 OCR 与 TXT 导出继续可用。单图上限25 MB，输入长边缩放至2400像素。OCR 当前仍是随包 Tesseract 过渡引擎，灰度/对比度增强仍是原型实现，**不计为原核心迁移成果**。
-
-原自动找边目前进入 Wama 模型运行链，原 `UncommonOCRDetector` 也依赖另行准备的模型。原自动找边、原 OCR、智能增强模型和完整 PDF 编辑尚未迁移；Word/Excel、云 AI、云转换入口不提供。0.3.0 不宣称拥有原应用全部离线能力。
-
-APK 仅 arm64-v8a，可更新同签名的 HyperScan 0.2.0，本机 HyperScan 文档库保持同名。与原包/R5并列安装，不迁移原包文档。浏览器支持已有编辑/OCR及 PDF 流程；原透视校正仅在 Android 应用提供。
-
-## 开发和构建
+## 构建
 
 ```sh
 npm ci
@@ -36,23 +25,18 @@ python3 scripts/prepare-original-core.py
 npm test
 npm run build
 npm run test:e2e
-npm run dev -- --port 5173 --strictPort
+JAVA_HOME=/workspace/tools/jdk-21.0.12.1+1 /workspace/tools/gradle-8.14.3/bin/gradle --gradle-user-home /workspace/.local/share/hyperscan-gradle -p android testReleaseUnitTest
+bash scripts/build-offline.sh /workspace/artifacts/HyperScan-0.5.0-auto-scan.apk
 ```
 
-`prepare-original-core.py` 校验指定原 APK 和官方动态库资源，把原生库放到忽略的 `android/app/src/main/jniLibs`。原 APK 默认使用 `/workspace/artifacts/quark-original.apk`；文件缺失时从用户提供的公开 Release 下载并核对已知 SHA256，也可用 `--apk PATH --cache PATH` 指定位置。原 APK、第三方二进制和密钥不提交 Git；复现构建需要这些原授权资源及其获取地址仍可用。
+构建脚本拒绝覆盖已有产物。SDK/JDK/Gradle与签名在checkout外；不上传私钥/密码。`prepare-original-core.py` 校验指定原APK SHA256、官方默认QuarKit下载包、资产清单中的模型MD5，生成原组件SHA256清单及忽略的模型/原生库。运行时完全不下载。保留原JNI包名，应用包名独立；OCR用 `.traineddata` / `gzip:false` 避免AAPT剥离压缩后缀。
 
-JDK21、SDK36、Build Tools35/36和Gradle8.14.3由脚本固定并校验。签名/审计构建：
+## 验证与实际边界
 
-```sh
-bash scripts/build-offline.sh /workspace/artifacts/HyperScan-0.4.0-camera-preview.apk
-```
+通过18项TypeScript单元测试、5项Java找边算法测试、8项浏览器流程测试、Android Release构建、签名/对齐、原组件摘要/依赖、73项QuarKit注册签名与25项AliNN导出接口审计。算法测试覆盖斜纸张、文字、阴影、深色纸张和空白/圆形误检；流程测试覆盖实时视频拍摄、释放相机、权限拒绝、本机存储、图片编辑、OCR与多页PDF。
 
-脚本拒绝覆盖已有产物，复用 checkout 外的开发签名。不得把密钥/密码上传到仓库。`postinstall` 复制 OCR 的 Worker、WASM 和 `.traineddata`；使用 `gzip:false` 防止 AAPT 剥离 gzip 后缀导致加载失败。
+云环境没有Android真机。**原MNN模型在Android上的实际推理、实时框与取景的坐标对齐、原QuarKit结果及自动拍摄尚未经真机验证**；Java算法测试验证的是本地轮廓回退，不能替代原模型推理验证。主机公开MNN 3.6不能读取原APK定制格式，不改原模型数据来强行通过。保留原APK同版MNN和AliNN桥；初始化失败会使用已测试的本地轮廓检测并显示来源。
 
-## 验证范围
+原六点/书籍曲面、原OCR模型、原智能增强模型及完整PDF编辑尚未迁移；不提供Word/Excel、云AI和云转换。诊断日志标签：`HyperScanEdges`（模型/检测）、`HyperScanCore`（校正/PDF）、`HyperScanCamera`（相机），不输出图片或凭据。
 
-本次通过12项单元测试、7项浏览器流程测试、Android Release 编译、APK签名/对齐审计，以及原库摘要、依赖和73项JNI注册签名检查。浏览器测试覆盖混合横竖页PDF、PDF设置保存、裁剪/旋转、文档保存与排序、本地OCR（阻断外部请求）、TXT、手机深色模式。
-
-**云环境没有 Android 设备。原库加载与真实透视结果、Android原生PDF、拍照和保存回调尚未经真机验证。**静态 JNI 匹配不能证明算法已在设备上跑通。首次测试建议断网导入一张斜拍纸张，调整四角、保存/重新打开、导出PDF；失败时保留 `HyperScanCore` 标签的原始错误栈。日志不输出图片、凭据或请求正文。
-
-历史 APK 诊断保留在 [community](community/README.md)，其安全 SDK 和业务后端不加入当前迁移包。项目新写代码采用 MIT；原组件及第三方依赖保留其授权和归属，不能将原二进制宣称为我们原创的开源源码。
+新写代码采用MIT；原二进制/模型及第三方组件保留原授权和归属，不将它们宣称为我们原创的开源源码。来源见 [核心迁移记录](community/CORE-MIGRATION.md) 和 [资源清单](community/core/native-manifest.json)。

@@ -22,6 +22,7 @@ export function pdfPageSize(settings: PdfSettings, image: { width: number; heigh
   return landscape ? [size[1], size[0]] : [size[0], size[1]];
 }
 interface OriginalCore {
+  detectDocument(options: { image: string }): Promise<{ corners: number[] | null; engine: string }>;
   capabilities(): Promise<{ perspective: boolean; pdf: boolean; automaticEdgeDetection: boolean; originalOcr: boolean }>;
   perspective(options: { image: string; corners: number[] }): Promise<{ image: string; width: number; height: number; engine: string }>;
   savePdf(options: PdfSettings & { pages: string[]; filename: string }): Promise<{ cancelled: boolean; engine: string }>;

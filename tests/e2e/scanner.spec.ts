@@ -138,3 +138,19 @@ test('camera permission denial preserves editing and offers a clear error', asyn
   await expect(page.locator('.live-camera')).toHaveCount(0);
   await importPage(page);
 });
+
+test('batch import, shadow cleanup and black/white preserve recoverable source pages', async ({ page }) => {
+  await page.goto('/');
+  const encoded = await page.evaluate(() => {
+    const c=document.createElement('canvas'); c.width=500; c.height=350;
+    const ctx=c.getContext('2d')!; const g=ctx.createLinearGradient(0,0,500,0); g.addColorStop(0,'#909090'); g.addColorStop(1,'#dddddd');ctx.fillStyle=g;ctx.fillRect(0,0,500,350);ctx.fillStyle='#111';ctx.fillRect(100,150,250,8);return c.toDataURL('image/png').split(',')[1];
+  });
+  await page.locator('#file-input').setInputFiles(['one','two'].map(name=>({name:`${name}.png`,mimeType:'image/png',buffer:Buffer.from(encoded,'base64')})));
+  await expect(page.locator('.thumbnail')).toHaveCount(2);
+  const sample=()=>page.locator('.preview img').evaluate((img:HTMLImageElement)=>{const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;const ctx=c.getContext('2d')!;ctx.drawImage(img,0,0);return [ctx.getImageData(30,30,1,1).data[0],ctx.getImageData(200,153,1,1).data[0]];});
+  const original=await sample();expect(original[0]).toBeLessThan(180);
+  await page.getByRole('button',{name:'去阴影',exact:true}).click(); await expect(page.getByRole('status')).toContainText('图像增强已应用');expect((await sample())[0]).toBeGreaterThan(240);
+  await page.getByRole('button',{name:'黑白',exact:true}).click();await expect(page.getByRole('status')).toContainText('图像增强已应用');const clean=await sample();expect(clean[0]).toBeGreaterThan(245);expect(clean[1]).toBeLessThan(15);
+  await page.getByRole('button',{name:'保存文档',exact:true}).click();await page.reload();await page.getByRole('button',{name:'打开 未命名文档',exact:true}).click();await expect(page.locator('.thumbnail')).toHaveCount(2);
+  await page.getByRole('button',{name:'恢复原图',exact:true}).click();await expect(page.getByRole('status')).toContainText('已恢复原图');expect((await sample())[0]).toBeCloseTo(original[0],-1);
+});

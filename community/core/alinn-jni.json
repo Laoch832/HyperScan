@@ -1,0 +1,102 @@
+[
+  {
+    "name": "nativeBufferToBitmap",
+    "descriptor": "([BIIILandroid/graphics/Bitmap;II[F)I"
+  },
+  {
+    "name": "nativeConvertBitmapToTensor",
+    "descriptor": "(Landroid/graphics/Bitmap;JIII[F[F[F)Z"
+  },
+  {
+    "name": "nativeConvertBufferToTensor",
+    "descriptor": "([BIIJIIII[F[F[F)Z"
+  },
+  {
+    "name": "nativeCreateImageTensor",
+    "descriptor": "(III)J"
+  },
+  {
+    "name": "nativeCreateNetFromFile",
+    "descriptor": "(Ljava/lang/String;)J"
+  },
+  {
+    "name": "nativeCreateSession",
+    "descriptor": "(JIIIII[Ljava/lang/String;)J"
+  },
+  {
+    "name": "nativeCreateSessionWithFlag",
+    "descriptor": "(JIIIII[Ljava/lang/String;[Z)J"
+  },
+  {
+    "name": "nativeDeviceSupportNPU",
+    "descriptor": "()Z"
+  },
+  {
+    "name": "nativeGetSessionInput",
+    "descriptor": "(JJLjava/lang/String;)J"
+  },
+  {
+    "name": "nativeGetSessionOutput",
+    "descriptor": "(JJLjava/lang/String;)J"
+  },
+  {
+    "name": "nativeNetBizCode",
+    "descriptor": "(J)Ljava/lang/String;"
+  },
+  {
+    "name": "nativeReleaseNet",
+    "descriptor": "(J)J"
+  },
+  {
+    "name": "nativeReleaseSession",
+    "descriptor": "(JJ)V"
+  },
+  {
+    "name": "nativeReleaseTensor",
+    "descriptor": "(J)J"
+  },
+  {
+    "name": "nativeReshapeSession",
+    "descriptor": "(JJ)I"
+  },
+  {
+    "name": "nativeReshapeTensor",
+    "descriptor": "(JJ[I)V"
+  },
+  {
+    "name": "nativeRunSession",
+    "descriptor": "(JJ)I"
+  },
+  {
+    "name": "nativeRunSessionWithCallback",
+    "descriptor": "(JJ[Ljava/lang/String;[J)I"
+  },
+  {
+    "name": "nativeSetInputFloatData",
+    "descriptor": "(JJ[F)V"
+  },
+  {
+    "name": "nativeSetInputIntData",
+    "descriptor": "(JJ[I)V"
+  },
+  {
+    "name": "nativeTensorGetData",
+    "descriptor": "(J[F)I"
+  },
+  {
+    "name": "nativeTensorGetDimensionType",
+    "descriptor": "(J)I"
+  },
+  {
+    "name": "nativeTensorGetDimensions",
+    "descriptor": "(J)[I"
+  },
+  {
+    "name": "nativeTensorGetIntData",
+    "descriptor": "(J[I)I"
+  },
+  {
+    "name": "nativeTensorGetUINT8Data",
+    "descriptor": "(J[B)I"
+  }
+]

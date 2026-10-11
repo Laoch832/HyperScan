@@ -20,7 +20,7 @@ logger.disable('androguard')
 apk = APK(str(args.apk))
 assert apk.get_package() == 'app.hyperscan.android'
 assert apk.get_app_name() == 'HyperScan'
-assert apk.get_androidversion_code() == '4'
+assert apk.get_androidversion_code() == '5'
 permissions = set(apk.get_permissions())
 assert 'android.permission.CAMERA' in permissions
 assert not permissions & {'android.permission.INTERNET', 'android.permission.ACCESS_NETWORK_STATE',
@@ -75,6 +75,19 @@ with ZipFile(args.apk) as archive:
         actual = declared['L' + klass + ';']
         for method in methods:
             assert actual[(method['name'], method['descriptor'])] & 0x100, (klass, method)
+    alinn_methods = json.loads((Path(__file__).resolve().parents[1] / 'community/core/alinn-jni.json').read_text())
+    alinn_class = 'com/taobao/android/alinnkit/alinn/AliNNNetNative'
+    alinn_symbols = ELFFile(io.BytesIO(archive.read('lib/arm64-v8a/libmnnkitcore.so'))).get_section_by_name('.dynsym')
+    symbol_names = {symbol.name for symbol in alinn_symbols.iter_symbols()}
+    actual = declared['L' + alinn_class + ';']
+    for method in alinn_methods:
+        assert actual[(method['name'], method['descriptor'])] & 0x100
+        assert 'Java_' + alinn_class.replace('/', '_') + '_' + method['name'] in symbol_names
+    document_models = {}
+    for model, digest in native_manifest['document_models'].items():
+        asset = 'assets/scanner-models/' + model
+        assert hashlib.sha256(archive.read(asset)).hexdigest() == digest
+        document_models[model] = digest
     assert 'Lapp/hyperscan/android/OriginalCorePlugin;' in declared
     supplied = set(native_manifest['libraries'])
     platform = {'libc.so', 'libm.so', 'libdl.so', 'liblog.so', 'libandroid.so', 'libjnigraphics.so', 'libEGL.so', 'libGLESv2.so'}
@@ -97,7 +110,7 @@ report = {
     'version': apk.get_androidversion_name(), 'version_code': apk.get_androidversion_code(),
     'apk_sha256': hashlib.sha256(args.apk.read_bytes()).hexdigest(), 'size_bytes': args.apk.stat().st_size,
     'network_permission': False, 'automatic_backup': False, 'debuggable': False,
-    'permissions': sorted(permissions), 'packaged_ocr_files_sha256': models,
+    'permissions': sorted(permissions), 'original_document_models_sha256': document_models, 'alinn_jni_count': len(alinn_methods), 'packaged_ocr_files_sha256': models,
     'packaged_wasm_variants': wasm, 'original_security_sdk_present': False,
     'structural_checks_passed': True, 'android_device_tested': False,
     'native_core_sha256': native_manifest['libraries'],

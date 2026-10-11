@@ -1,4 +1,4 @@
-name: Publish HyperScan live camera preview 0.4.0
+name: Publish HyperScan automatic scanner 0.5.0
 on:
   workflow_dispatch:
 permissions:
@@ -10,12 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: release-inputs-camera-preview-0.4.0
+          ref: release-inputs-auto-scan-0.5.0
           persist-credentials: false
       - name: Verify release inputs
         run: sha256sum --check RELEASE-SHA256SUMS.txt
-      - name: Publish live camera preview
+      - name: Publish automatic scanner
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release upload camera-preview-0.4.0 HyperScan-0.4.0-camera-preview.apk HyperScan-Source.zip HyperScan-0.4.0-camera-preview.apk.validation.json RELEASE-SHA256SUMS.txt
+        run: gh release upload auto-scan-0.5.0 HyperScan-0.5.0-auto-scan.apk HyperScan-Source.zip HyperScan-0.5.0-auto-scan.apk.validation.json RELEASE-SHA256SUMS.txt

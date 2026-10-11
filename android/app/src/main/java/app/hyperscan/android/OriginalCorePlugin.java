@@ -11,6 +11,7 @@ import android.util.Log;
 import androidx.activity.result.ActivityResult;
 import app.hyperscan.android.core.OriginalPdfWriter;
 import app.hyperscan.android.core.OriginalPerspective;
+import app.hyperscan.android.core.DocumentDetector;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -39,7 +40,7 @@ public final class OriginalCorePlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("perspective", Arrays.asList(Build.SUPPORTED_ABIS).contains("arm64-v8a"));
         result.put("pdf", true);
-        result.put("automaticEdgeDetection", false);
+        result.put("automaticEdgeDetection", true);
         result.put("originalOcr", false);
         call.resolve(result);
     }
@@ -53,6 +54,20 @@ public final class OriginalCorePlugin extends Plugin {
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0 || bounds.outWidth > 2400 || bounds.outHeight > 2400)
             throw new IllegalArgumentException("Image dimensions must be within 2400 pixels");
         return bytes;
+    }
+
+    @PluginMethod public void detectDocument(PluginCall call) {
+        new Thread(()->{
+            Bitmap input=null;
+            try(DocumentDetector detector=new DocumentDetector(getContext())) {
+                byte[] bytes=imageBytes(call.getString("image"));input=BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+                DocumentDetector.Result detected=detector.detect(input);JSObject out=new JSObject();out.put("engine",detected.engine);
+                if(detected.corners==null)out.put("corners",org.json.JSONObject.NULL);
+                else {JSArray array=new JSArray();for(double value:detected.corners)array.put(value);out.put("corners",array);}
+                call.resolve(out);
+            }catch(Exception|LinkageError error){Log.e("HyperScanEdges","PHOTO_DETECTION_FAILED",error);call.reject("本地找边失败，原图已保留。",error instanceof Exception?(Exception)error:null);}
+            finally{if(input!=null)input.recycle();}
+        },"hyperscan-photo-edges").start();
     }
 
     @PluginMethod public void perspective(PluginCall call) {

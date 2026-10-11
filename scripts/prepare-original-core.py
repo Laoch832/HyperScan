@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import io
 import os
 import tempfile
 import urllib.request
@@ -61,10 +62,24 @@ for entry in metadata['libDataList']:
         raise SystemExit('Inner library mismatch: ' + entry['libName'])
 (dest / 'lib_info.json').unlink()
 with ZipFile(args.apk) as apk:
-    for name in ['libMNN.so', 'libc++_shared.so']:
+    for name in ['libMNN.so', 'libc++_shared.so', 'libmnnkitcore.so']:
         (dest / name).write_bytes(apk.read('lib/arm64-v8a/' + name))
+models = {}
+with ZipFile(args.apk) as apk:
+    packed_models = apk.read('assets/walle/common_multi_detect/common_multi_detect_main.res.zip')
+    config = json.loads(apk.read('assets/walle/walle_config.json'))
+    expected_models = next(item['r']['files'] for item in config if item['n'] == 'common_multi_detect')
+    model_dest = ROOT / 'android/app/src/main/assets/scanner-models'
+    model_dest.mkdir(parents=True, exist_ok=True)
+    with ZipFile(io.BytesIO(packed_models)) as packed:
+        assert set(packed.namelist()) == set(expected_models)
+        for name, expected_md5 in expected_models.items():
+            data = packed.read(name)
+            assert hashlib.md5(data).hexdigest().lstrip('0') == expected_md5.lstrip('0'), name
+            (model_dest / name).write_bytes(data)
+            models[name] = hashlib.sha256(data).hexdigest()
 report = {'original_apk_sha256': APK_SHA, 'quarkit_archive_sha256': ARCHIVE_SHA,
-          'archive_url': URL, 'original_loader_class': 'j71.f',
+          'archive_url': URL, 'original_loader_class': 'j71.f', 'document_models': models,
           'libraries': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(dest.glob('*.so'))}}
 (ROOT / 'community/core/native-manifest.json').write_text(json.dumps(report, indent=2) + '\n')
-print('Prepared 6 verified arm64 original computation libraries; no runtime downloader.')
+print('Prepared 7 verified arm64 original computation libraries and 3 original document models; no runtime downloader.')
