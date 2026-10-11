@@ -10,7 +10,7 @@
 - 原 `PicturesPDFExportAndroidImp` 本地绘制路径：迁移 Android `PdfDocument`、按单页图片方向选择横竖页、百分比边距和居中等比缩放；去掉 CMS、统计、权限服务和云端预览的外围依赖。支持 A4/A5/Letter、自动/横向/纵向、0–20% 边距，通过系统文件保存面板导出。
 - 校正、裁剪、旋转保持原图；可恢复原图。校正结果缓存，后续滤镜操作不重复调用原生校正。失败不覆盖当前页，PDF 遇到坏页直接报错，不默默漏页。
 
-原 QuarKit 库是原 APK 内置下载配置 `j71.f` 指向的 2022-04-24 默认资源，并非从用户设备当前缓存取得的最新版本。下载包与原配置的大小/MD5匹配，另外固定 SHA256；六个库、66 个 JNI 注册签名和非系统库依赖均审计。它们按原组件授权管理，不自动变成 MIT 源码。来源、摘要及迁移范围见 [核心迁移记录](community/CORE-MIGRATION.md) 和 [资源清单](community/core/native-manifest.json)。
+原 QuarKit 库是原 APK 内置下载配置 `j71.f` 指向的 2022-04-24 默认资源，并非从用户设备当前缓存取得的最新版本。下载包与原配置的大小/MD5匹配，另外固定 SHA256；六个库、73 个 JNI 注册签名和非系统库依赖均审计。它们按原组件授权管理，不自动变成 MIT 源码。来源、摘要及迁移范围见 [核心迁移记录](community/CORE-MIGRATION.md) 和 [资源清单](community/core/native-manifest.json)。
 
 ## 保留的工作空间与尚未迁移的核心
 
@@ -45,7 +45,7 @@ bash scripts/build-offline.sh /workspace/artifacts/HyperScan-0.3.0-core-preview.
 
 ## 验证范围
 
-本次通过12项单元测试、5项浏览器流程测试、Android Release 编译、APK签名/对齐审计，以及原库摘要、依赖和66项JNI注册签名检查。浏览器测试覆盖混合横竖页PDF、PDF设置保存、裁剪/旋转、文档保存与排序、本地OCR（阻断外部请求）、TXT、手机深色模式。
+本次通过12项单元测试、5项浏览器流程测试、Android Release 编译、APK签名/对齐审计，以及原库摘要、依赖和73项JNI注册签名检查。浏览器测试覆盖混合横竖页PDF、PDF设置保存、裁剪/旋转、文档保存与排序、本地OCR（阻断外部请求）、TXT、手机深色模式。
 
 **云环境没有 Android 设备。原库加载与真实透视结果、Android原生PDF、拍照和保存回调尚未经真机验证。**静态 JNI 匹配不能证明算法已在设备上跑通。首次测试建议断网导入一张斜拍纸张，调整四角、保存/重新打开、导出PDF；失败时保留 `HyperScanCore` 标签的原始错误栈。日志不输出图片、凭据或请求正文。
 

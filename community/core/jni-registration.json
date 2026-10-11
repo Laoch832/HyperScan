@@ -268,5 +268,35 @@
       "name": "getCurrentNativeEGLSurface",
       "descriptor": "(I)J"
     }
+  ],
+  "com/quark/quarkit/mediascan/MediaScanner": [
+    {
+      "name": "setupScanner_",
+      "descriptor": "([BLandroid/content/res/AssetManager;)I"
+    },
+    {
+      "name": "start_",
+      "descriptor": "(I)V"
+    },
+    {
+      "name": "addSearchPath_",
+      "descriptor": "(ILjava/lang/String;)V"
+    },
+    {
+      "name": "addScanFiles_",
+      "descriptor": "(I[B)V"
+    },
+    {
+      "name": "setCallback_",
+      "descriptor": "(ILjava/lang/Object;)V"
+    },
+    {
+      "name": "stop_",
+      "descriptor": "(I)V"
+    },
+    {
+      "name": "releaseScanner_",
+      "descriptor": "(I)V"
+    }
   ]
 }

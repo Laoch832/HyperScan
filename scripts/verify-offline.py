@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import io
+import struct
 from pathlib import Path
 from zipfile import ZipFile
 from androguard.core.apk import APK
@@ -40,6 +41,28 @@ with ZipFile(args.apk) as archive:
     for library, sha256 in native_manifest['libraries'].items():
         assert hashlib.sha256(archive.read('lib/arm64-v8a/' + library)).hexdigest() == sha256
     registration = json.loads((Path(__file__).resolve().parents[1] / 'community/core/jni-registration.json').read_text())
+    # All FOUR registrations called by this pinned libquarkit JNI_OnLoad, including
+    # MediaScanner's early registration even though HyperScan never runs its graphs.
+    pinned = ELFFile(io.BytesIO(archive.read('lib/arm64-v8a/libquarkit.so')))
+    relocations = {r['r_offset']: r['r_addend'] for section in pinned.iter_sections()
+                   if section['sh_type'] == 'SHT_RELA' for r in section.iter_relocations() if r['r_info_type'] == 1027}
+    def read_virtual(address, size):
+        for segment in pinned.iter_segments():
+            if segment['p_type'] == 'PT_LOAD' and segment['p_vaddr'] <= address < segment['p_vaddr'] + segment['p_filesz']:
+                offset = address - segment['p_vaddr']
+                return segment.data()[offset:offset + size]
+        raise AssertionError('Invalid native table address')
+    def native_string(address):
+        return read_virtual(address, 256).split(b'\0')[0].decode()
+    binary_registration = {}
+    for class_address, table_address, count in [(0x1adb03, 0x217cc8, 7), (0x1a3b8f, 0x212d28, 32), (0x1a4726, 0x213178, 32), (0x1a47fc, 0x2134e8, 2)]:
+        methods = []
+        for i in range(count):
+            address = table_address + i * 24
+            pointers = [relocations.get(address + j, struct.unpack('<Q', read_virtual(address + j, 8))[0]) for j in (0, 8)]
+            methods.append({'name': native_string(pointers[0]), 'descriptor': native_string(pointers[1])})
+        binary_registration[native_string(class_address)] = methods
+    assert binary_registration == registration, 'Original startup registration inventory is incomplete'
     declared = {}
     for dex_name in names:
         if dex_name.startswith('classes') and dex_name.endswith('.dex'):
