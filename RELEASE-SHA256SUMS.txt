@@ -1,0 +1,3 @@
+47c56518fa30b70d4aff600e4c9b8e71266cfde7162675b141ffcca3b9f6b010  HyperScan-0.4.0-camera-preview.apk
+6d32093b06935d1b602ecbca5e55984aa569c3521ad874770037f5055028d596  HyperScan-Source.zip
+a23502d90c36b8718850a5384b6efaacee272a976f33a4e20b091221e00bf097  HyperScan-0.4.0-camera-preview.apk.validation.json
