@@ -1,0 +1,3 @@
+fb1ef7367c2da147f70fbe0c59d2d8677e5b813210b967a0a2c23c45fcf4ae89  HyperScan-0.3.0-core-preview.apk
+ec72473da37df35713da328f387c94c7cfc5fb0f1d3172a623e7a30ce182a6e3  HyperScan-0.3.0-core-preview.apk.validation.json
+e19861ec5f4f7f553139e74c3323f7da0c053dd0d72a1f407827980eb9967c3e  HyperScan-Source.zip

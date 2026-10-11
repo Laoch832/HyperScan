@@ -1,0 +1,116 @@
+{
+  "author": "Laoch832",
+  "edition": "original-core-migration-preview",
+  "package": "app.hyperscan.android",
+  "version": "0.3.0-core-preview",
+  "version_code": "3",
+  "apk_sha256": "fb1ef7367c2da147f70fbe0c59d2d8677e5b813210b967a0a2c23c45fcf4ae89",
+  "size_bytes": 48661425,
+  "network_permission": false,
+  "automatic_backup": false,
+  "debuggable": false,
+  "permissions": [
+    "app.hyperscan.android.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "packaged_ocr_files_sha256": {
+    "assets/public/ocr/lang/chi_sim.traineddata": "9784f7c917c546424b690fcde708ce1f604a4393d08bb51ddab146d7d7c794e6",
+    "assets/public/ocr/lang/eng.traineddata": "5dc5d8d640a212c9d6184921ba103b186f50e0fed9ee716c53e6b312b400d747",
+    "assets/public/ocr/worker.min.js": "576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d"
+  },
+  "packaged_wasm_variants": [
+    "assets/public/ocr/core/tesseract-core-lstm.wasm",
+    "assets/public/ocr/core/tesseract-core-relaxedsimd-lstm.wasm",
+    "assets/public/ocr/core/tesseract-core-relaxedsimd.wasm",
+    "assets/public/ocr/core/tesseract-core-simd-lstm.wasm",
+    "assets/public/ocr/core/tesseract-core-simd.wasm",
+    "assets/public/ocr/core/tesseract-core.wasm"
+  ],
+  "original_security_sdk_present": false,
+  "structural_checks_passed": true,
+  "android_device_tested": false,
+  "native_core_sha256": {
+    "libMNN.so": "23a379210da50e461e36677cdb361eb4d7275550a33d1aea07fd1df4e65079ae",
+    "libc++_shared.so": "4ffcffbfb8bf691111247f64e650607392eb951cd8bbccae2ce9f4075bcba9a5",
+    "libopencv_java3.so": "2b44eca0677ff84786670fd28cc195f63afedb54ae06a3dd2cd067893d028d9b",
+    "libquarkit.so": "4e2e5a5d9e118660a8dd47ab1ce16d05784111928ef65faec1ab63ac026a2a9b",
+    "libtbb.so": "cdbaed50a3a4c9690b6a89a54e0d86251b9999c756ecd89fb78a7272d0f34e43",
+    "libupipe_jni.so": "5e1b02592e16f9d242aa081e9c9c763d0c9b247bbdc428c88f9048fe161e0565"
+  },
+  "native_dependencies": {
+    "libupipe_jni.so": [
+      "libopencv_java3.so",
+      "libMNN.so",
+      "libc++_shared.so",
+      "libm.so",
+      "liblog.so",
+      "libjnigraphics.so",
+      "libEGL.so",
+      "libdl.so",
+      "libandroid.so",
+      "libGLESv2.so",
+      "libc.so"
+    ],
+    "libtbb.so": [
+      "libc.so",
+      "libm.so",
+      "libc++_shared.so",
+      "libdl.so"
+    ],
+    "libc++_shared.so": [
+      "libc.so",
+      "libdl.so"
+    ],
+    "libopencv_java3.so": [
+      "libdl.so",
+      "libm.so",
+      "liblog.so",
+      "libtbb.so",
+      "libc.so",
+      "libc++_shared.so"
+    ],
+    "libquarkit.so": [
+      "liblog.so",
+      "libjnigraphics.so",
+      "libandroid.so",
+      "libtbb.so",
+      "libupipe_jni.so",
+      "libMNN.so",
+      "libEGL.so",
+      "libGLESv2.so",
+      "libopencv_java3.so",
+      "libm.so",
+      "libc++_shared.so",
+      "libdl.so",
+      "libc.so"
+    ],
+    "libMNN.so": [
+      "liblog.so",
+      "libm.so",
+      "libc++_shared.so",
+      "libdl.so",
+      "libc.so"
+    ]
+  },
+  "jni_registration_methods_verified": 73,
+  "migrated_paths": [
+    "QuarKit imagePerspective",
+    "PicturesPDFExportAndroidImp local drawing path"
+  ],
+  "not_migrated": [
+    "automatic edge models",
+    "original OCR models",
+    "original intelligent enhancement models"
+  ],
+  "browser_tests_cover": [
+    "import",
+    "crop",
+    "rotate",
+    "enhance",
+    "local persistence",
+    "reorder",
+    "two-page image PDF",
+    "real OCR with external requests blocked",
+    "TXT",
+    "mobile dark mode"
+  ]
+}
