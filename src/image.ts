@@ -1,6 +1,7 @@
+import { correctOriginal, type Corners } from './original-core';
 export type Filter = 'original' | 'gray' | 'document';
 export type Crop = { left: number; top: number; right: number; bottom: number };
-export type Edit = { filter: Filter; rotation: number; crop: Crop };
+export type Edit = { filter: Filter; rotation: number; crop: Crop; corners?: Corners };
 export const defaultEdit = (): Edit => ({ filter: 'original', rotation: 0, crop: { left: 0, top: 0, right: 100, bottom: 100 } });
 
 export function validateCrop(crop: Crop): void {
@@ -43,7 +44,7 @@ export async function readPhoto(file: File): Promise<string> {
 
 export async function renderPhoto(src: string, edit: Edit): Promise<string> {
   validateCrop(edit.crop);
-  const image = await loadImage(src);
+  const image = await loadImage(edit.corners ? await correctOriginal(src, edit.corners) : src);
   const { left, top, right, bottom } = edit.crop;
   const width = Math.max(1, Math.round(image.width * (right - left) / 100));
   const height = Math.max(1, Math.round(image.height * (bottom - top) / 100));

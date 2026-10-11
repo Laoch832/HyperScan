@@ -2,20 +2,35 @@ import { jsPDF } from 'jspdf';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import type { ScanDocument } from './storage';
 import { loadImage } from './image';
+import { defaultPdfSettings, nativeCorePlatform, originalCore, pdfPageSize, type PdfSettings } from './original-core';
 const localExport = registerPlugin<{ save(options: { filename: string; mime: string; data: string }): Promise<{ cancelled: boolean }> }>('OfflineExport');
 
-export async function createPdf(doc: ScanDocument): Promise<Blob> {
+export async function createPdf(doc: ScanDocument, settings: PdfSettings = defaultPdfSettings()): Promise<Blob> {
   if (!doc.pages.length) throw new Error('请先添加至少一页文档。');
-  const pdf = new jsPDF({ format: 'a4', unit: 'mm', compress: true });
+  let pdf: jsPDF | undefined;
   for (const [index, page] of doc.pages.entries()) {
-    if (index) pdf.addPage();
     const image = await loadImage(page.image);
-    const ratio = Math.min(190 / image.width, 277 / image.height);
+    const [pageWidth, pageHeight] = pdfPageSize(settings, image);
+    const orientation = pageWidth > pageHeight ? 'landscape' : 'portrait';
+    if (index) pdf!.addPage([pageWidth, pageHeight], orientation);
+    else pdf = new jsPDF({ format: [pageWidth, pageHeight], orientation, unit: 'pt', compress: true });
+    const padX = Math.trunc(pageWidth * settings.margin), padY = Math.trunc(pageHeight * settings.margin);
+    const ratio = Math.min((pageWidth - 2 * padX) / image.width, (pageHeight - 2 * padY) / image.height);
     const width = image.width * ratio, height = image.height * ratio;
-    pdf.addImage(page.image, 'JPEG', (210 - width) / 2, (297 - height) / 2, width, height);
+    pdf!.addImage(page.image, 'JPEG', (pageWidth - width) / 2, (pageHeight - height) / 2, width, height);
   }
-  pdf.setProperties({ title: doc.name, creator: 'HyperScan · Laoch832' });
-  return pdf.output('blob');
+  pdf!.setProperties({ title: doc.name, creator: 'HyperScan · Laoch832' });
+  return pdf!.output('blob');
+}
+
+export async function exportPdf(doc: ScanDocument, settings: PdfSettings): Promise<void> {
+  if (!doc.pages.length) throw new Error('请先添加至少一页文档。');
+  pdfPageSize(settings, { width: 1, height: 1 });
+  const filename = `${doc.name.trim() || '文档'}.pdf`.replace(/[\\/:*?"<>|]/g, '_');
+  if (nativeCorePlatform()) {
+    const result = await originalCore.savePdf({ ...settings, filename, pages: doc.pages.map(page => page.image) });
+    if (result.cancelled) throw new Error('已取消保存。');
+  } else await exportFile(await createPdf(doc, settings), filename);
 }
 
 export async function exportFile(blob: Blob, filename: string): Promise<void> {

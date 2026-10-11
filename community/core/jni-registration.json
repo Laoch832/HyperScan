@@ -1,0 +1,272 @@
+{
+  "com/aiplatform/upipe/UpipeNative": [
+    {
+      "name": "addSearchPathNative",
+      "descriptor": "(JLjava/lang/String;)V"
+    },
+    {
+      "name": "addCallbackNative",
+      "descriptor": "(JLjava/lang/String;Ljava/lang/Object;Ljava/lang/Class;)I"
+    },
+    {
+      "name": "addCallbackWithTsNative",
+      "descriptor": "(JLjava/lang/String;Ljava/lang/Object;Ljava/lang/Class;)I"
+    },
+    {
+      "name": "addCallbackNative",
+      "descriptor": "(JLjava/lang/String;Ljava/lang/Object;Ljava/lang/String;)I"
+    },
+    {
+      "name": "getImageFramesFromPacketNative",
+      "descriptor": "(J)[[B"
+    },
+    {
+      "name": "getFaceIdResultFromPacketNative",
+      "descriptor": "(J)[B"
+    },
+    {
+      "name": "getBytesFromPacketNative",
+      "descriptor": "(J)[B"
+    },
+    {
+      "name": "getFloatArrayFromPacketNative",
+      "descriptor": "(J)[F"
+    },
+    {
+      "name": "getFloatFromPacketNative",
+      "descriptor": "(J)F"
+    },
+    {
+      "name": "getIntArrayFromPacketNative",
+      "descriptor": "(J)[I"
+    },
+    {
+      "name": "getStringArrayFromPacketNative",
+      "descriptor": "(J)[Ljava/lang/String;"
+    },
+    {
+      "name": "getStringFromPacketNative",
+      "descriptor": "(J)Ljava/lang/String;"
+    },
+    {
+      "name": "setSurfaceOutputNative",
+      "descriptor": "(JLjava/lang/String;)J"
+    },
+    {
+      "name": "loadGraphNative",
+      "descriptor": "(JLjava/lang/String;)I"
+    },
+    {
+      "name": "loadGraphNative",
+      "descriptor": "(J[B)I"
+    },
+    {
+      "name": "startUPipeNative",
+      "descriptor": "(J)I"
+    },
+    {
+      "name": "closeUPipeNative",
+      "descriptor": "(J)I"
+    },
+    {
+      "name": "releaseUPipeNative",
+      "descriptor": "(J)V"
+    },
+    {
+      "name": "onNewFrameNative",
+      "descriptor": "(J[BIIIJLjava/lang/String;)I"
+    },
+    {
+      "name": "onNewFrameNative",
+      "descriptor": "(J[BIIILjava/lang/String;)I"
+    },
+    {
+      "name": "onNewFrameNative",
+      "descriptor": "(JLandroid/graphics/Bitmap;JLjava/lang/String;)I"
+    },
+    {
+      "name": "onNewPacketNative",
+      "descriptor": "(JLjava/lang/String;JLjava/lang/String;)I"
+    },
+    {
+      "name": "onNewPacketNative",
+      "descriptor": "(JIJLjava/lang/String;)I"
+    },
+    {
+      "name": "onNewPacketGpuNative",
+      "descriptor": "(JIIILjava/lang/String;JLjava/lang/Object;)I"
+    },
+    {
+      "name": "initUPipeNative",
+      "descriptor": "(Landroid/content/Context;Ljava/lang/String;)J"
+    },
+    {
+      "name": "setParentGlContextNative",
+      "descriptor": "(JJ)V"
+    },
+    {
+      "name": "setFlipYNative",
+      "descriptor": "(JZ)V"
+    },
+    {
+      "name": "setSurfaceNative",
+      "descriptor": "(JJLjava/lang/Object;)V"
+    },
+    {
+      "name": "glSyncTokenWaitOnCpu",
+      "descriptor": "(J)V"
+    },
+    {
+      "name": "glSyncTokenWaitOnGpu",
+      "descriptor": "(J)V"
+    },
+    {
+      "name": "glSyncTokenRelease",
+      "descriptor": "(J)V"
+    },
+    {
+      "name": "getUpipeConfigNative",
+      "descriptor": "(J)[B"
+    }
+  ],
+  "com/quark/quarkit/QuarKitUtil": [
+    {
+      "name": "getImageSimilarityNative",
+      "descriptor": "([BII[BIII)D"
+    },
+    {
+      "name": "getImageBrightDarkScoreNative",
+      "descriptor": "([BIII)D"
+    },
+    {
+      "name": "dbScanNative",
+      "descriptor": "([[FFILjava/lang/Class;)Ljava/lang/Object;"
+    },
+    {
+      "name": "cropNative",
+      "descriptor": "(Landroid/graphics/Bitmap;[Landroid/graphics/Point;Landroid/graphics/Bitmap;)V"
+    },
+    {
+      "name": "pageCorrect",
+      "descriptor": "(Landroid/graphics/Bitmap;[Landroid/graphics/Point;ZFZ)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "pageAffineProcess",
+      "descriptor": "(Landroid/graphics/Bitmap;[Landroid/graphics/Point;F)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "pageDewarpProcess",
+      "descriptor": "(Landroid/graphics/Bitmap;)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "CheckPaitiMatchResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;F)Z"
+    },
+    {
+      "name": "GetCardDewarpResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;[FF)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "GetScreenDewarpResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;[F)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "GetImageGrayScalingResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;I)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "GetImageBrighteningWorkerNative",
+      "descriptor": "(Ljava/lang/String;)J"
+    },
+    {
+      "name": "GetImageBrighteningWorkerResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;JI)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "ReleaseBrighteningWorkerNative",
+      "descriptor": "(J)I"
+    },
+    {
+      "name": "GetImageBinarizationWorkerNative",
+      "descriptor": "(Ljava/lang/String;)J"
+    },
+    {
+      "name": "GetImageBinarizationWorkerResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;JI)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "ReleaseBinarizationWorkerNative",
+      "descriptor": "(J)I"
+    },
+    {
+      "name": "GetImageEnhancementWorkerNative",
+      "descriptor": "(Ljava/lang/String;Ljava/lang/String;)J"
+    },
+    {
+      "name": "GetImageEnhancementWorkerResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;JI)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "ReleaseEnhancementWorkerNative",
+      "descriptor": "(J)I"
+    },
+    {
+      "name": "GetImageFilterClassWorkerNative",
+      "descriptor": "(Ljava/lang/String;)J"
+    },
+    {
+      "name": "GetImageFilterClassWorkerResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;J)I"
+    },
+    {
+      "name": "ReleaseImageFilterClassWorkerNative",
+      "descriptor": "(J)I"
+    },
+    {
+      "name": "GetMattingPostProcessResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;Z)Landroid/graphics/Bitmap;"
+    },
+    {
+      "name": "GetMattingPostProcessImageResultNative",
+      "descriptor": "(Landroid/graphics/Bitmap;Ljava/lang/Class;)Ljava/lang/Object;"
+    },
+    {
+      "name": "GetPortraitEnhanceImageResultNative",
+      "descriptor": "([BLjava/lang/Class;)Ljava/lang/Object;"
+    },
+    {
+      "name": "GetNewCropInfoNative",
+      "descriptor": "(II[F[F)Lcom/quark/quarkit/QuarKitRetData;"
+    },
+    {
+      "name": "calculatePerspectiveTransformWH",
+      "descriptor": "([Landroid/graphics/Point;IIF)[D"
+    },
+    {
+      "name": "calculatePerspectiveTransformPoints",
+      "descriptor": "([Landroid/graphics/Point;[Landroid/graphics/Point;)[D"
+    },
+    {
+      "name": "calculateWHRatio",
+      "descriptor": "([Landroid/graphics/Point;IIF)[I"
+    },
+    {
+      "name": "calculateWHRatioNew",
+      "descriptor": "([Landroid/graphics/Point;II)[I"
+    },
+    {
+      "name": "imagePerspective",
+      "descriptor": "(Landroid/graphics/Bitmap;[Landroid/graphics/Point;)Landroid/graphics/Bitmap;"
+    }
+  ],
+  "com/quark/quarkit/camera/Compat": [
+    {
+      "name": "getCurrentNativeEGLContext",
+      "descriptor": "()J"
+    },
+    {
+      "name": "getCurrentNativeEGLSurface",
+      "descriptor": "(I)J"
+    }
+  ]
+}

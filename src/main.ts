@@ -1,8 +1,9 @@
 import './style.css';
 import { defaultEdit, readPhoto, renderPhoto, type Edit } from './image';
 import { listDocuments, saveDocument, removeDocument, type ScanDocument, type Page } from './storage';
-import { createPdf, exportFile } from './export';
+import { exportPdf, exportFile } from './export';
 import { recognize } from './ocr';
+import { correctOriginal, defaultPdfSettings, fullCorners, nativeCorePlatform, originalCore, type Corners, type PdfSettings } from './original-core';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 let documents: ScanDocument[] = [];
@@ -12,6 +13,8 @@ let busy = false;
 let dirty = false;
 let search = '';
 let notice = '';
+let canCorrect = false;
+let workingCorners: Corners = fullCorners();
 const escape = (value: string) => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]!));
 function freshDocument(): ScanDocument { return { id: crypto.randomUUID(), name: '未命名文档', updatedAt: Date.now(), pages: [] }; }
 function selected(): Page | undefined { return current.pages.find(page => page.id === selectedId); }
@@ -41,7 +44,7 @@ function render(): void {
       <div class="sidebar-bottom">${icon('shield')}<div>文档留在你的设备上<small>本地处理 · 自由使用</small></div></div>
     </aside>
     <main>
-      <header><span class="breadcrumb">工作空间 <span>/</span> 我的文档</span><span class="edition">离线版 0.2</span></header>
+      <header><span class="breadcrumb">工作空间 <span>/</span> 我的文档</span><span class="edition">核心迁移测试 0.3</span></header>
       <section class="heading"><div><p class="eyebrow">MAKE ROOM FOR YOUR IDEAS</p><h1>纸张，变成可能。</h1><p class="subtitle">拍摄、编辑、识字、导出。每一步，都在你的设备上。</p></div><div class="local-badge"><span></span> 无需联网</div></section>
       <section class="workspace">
         <div class="editor-panel">
@@ -55,7 +58,8 @@ function render(): void {
         <aside class="tools-panel"><div class="tools-heading"><h2>文档工具</h2><span>随手整理，轻松导出</span></div>
           <div class="tool-grid"><button data-action="camera">${icon('camera')}<span>拍摄文档</span></button><button data-action="import">${icon('image')}<span>导入图片</span></button></div>
           <div class="tool-section"><h3>图像增强</h3><div class="filters">${([['original', '原图'], ['gray', '灰度'], ['document', '清晰文档']] as const).map(([value, label]) => `<button data-filter="${value}" class="${page?.edit.filter === value ? 'chosen' : ''}" ${!page ? 'disabled' : ''}><span class="filter-sample ${value}" aria-hidden="true">Aa</span>${label}</button>`).join('')}</div></div>
-          <div class="tool-section"><h3>调整页面</h3><div class="tool-grid compact"><button data-action="crop" ${!page ? 'disabled' : ''}>${icon('scan')}<span>裁剪边缘</span></button><button data-action="rotate" ${!page ? 'disabled' : ''}>${icon('rotate')}<span>旋转 90°</span></button></div><div class="reorder"><button data-action="previous" ${!page || current.pages.indexOf(page) === 0 ? 'disabled' : ''}>← 前移</button><button data-action="next" ${!page || current.pages.indexOf(page) === current.pages.length - 1 ? 'disabled' : ''}>后移 →</button><button data-action="remove-page" class="danger" ${!page ? 'disabled' : ''} aria-label="删除当前页">${icon('trash')}</button></div></div>
+          <div class="tool-section"><h3>调整页面</h3><div class="tool-grid compact"><button data-action="crop" ${!page ? 'disabled' : ''}>${icon('scan')}<span>裁剪边缘</span></button><button data-action="rotate" ${!page ? 'disabled' : ''}>${icon('rotate')}<span>旋转 90°</span></button><button data-action="perspective" ${!page || !canCorrect ? 'disabled' : ''}>${icon('scan')}<span>四角校正</span></button><button data-action="reset-page" ${!page ? 'disabled' : ''}><span>恢复原图</span></button></div>${!canCorrect ? '<p class="hint">四角校正在 Android 版中提供。</p>' : ''}<div class="reorder"><button data-action="previous" ${!page || current.pages.indexOf(page) === 0 ? 'disabled' : ''}>← 前移</button><button data-action="next" ${!page || current.pages.indexOf(page) === current.pages.length - 1 ? 'disabled' : ''}>后移 →</button><button data-action="remove-page" class="danger" ${!page ? 'disabled' : ''} aria-label="删除当前页">${icon('trash')}</button></div></div>
+          <div class="tool-section pdf-settings"><h3>PDF 页面</h3><label>纸张<select id="pdf-paper">${(['a4', 'a5', 'letter'] as const).map(value => `<option value="${value}" ${(current.pdf ?? defaultPdfSettings()).paper === value ? 'selected' : ''}>${value.toUpperCase()}</option>`).join('')}</select></label><label>方向<select id="pdf-orientation">${([['auto', '跟随每页图片'], ['portrait', '纵向'], ['landscape', '横向']] as const).map(([value, text]) => `<option value="${value}" ${(current.pdf ?? defaultPdfSettings()).orientation === value ? 'selected' : ''}>${text}</option>`).join('')}</select></label><label>边距 %<input id="pdf-margin" type="number" min="0" max="20" step="1" value="${Math.round((current.pdf ?? defaultPdfSettings()).margin * 100)}" /></label></div>
           <div class="tool-section"><h3>文字识别 <span class="small-tag">中 / EN</span></h3><button class="ocr-button" data-action="ocr" ${!page ? 'disabled' : ''}>${icon('text')} 识别当前页文字 <span>↗</span></button><p class="hint">使用设备上的 OCR 引擎。首次加载可能稍慢。</p>${page?.text ? `<label class="sr-only" for="recognized-text">识别结果</label><textarea id="recognized-text" rows="6">${escape(page.text)}</textarea><button class="text-button" data-action="text">导出全部文字 .txt</button>` : ''}</div>
           <div class="tip"><span>✦</span><p>让扫描更清晰<small>把纸张放在平整的表面，保持光线充足，拍摄时尽量正对文档。</small></p></div>
         </aside>
@@ -66,7 +70,8 @@ function render(): void {
     <input class="sr-only" id="file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple />
     <input class="sr-only" id="camera-input" type="file" accept="image/*" capture="environment" />
     <div id="notice" role="status" aria-live="polite" class="notice ${notice ? 'visible' : ''}">${escape(notice)}</div>
-    <dialog id="crop-dialog"><form id="crop-form"><h2>裁剪边缘</h2><p>按原图百分比调整保留区域，再应用到当前页。</p><div class="crop-preview">${page ? `<img src="${page.original}" alt="裁剪原图" /><div id="crop-box"></div>` : ''}</div><div class="crop-fields">${(['left', 'top', 'right', 'bottom'] as const).map((key, index) => `<label>${['左边', '上边', '右边', '下边'][index]} %<input type="number" name="${key}" min="0" max="100" step="1" value="${page?.edit.crop[key] ?? 0}" required /></label>`).join('')}</div><div class="dialog-actions"><button type="button" data-action="close-crop">取消</button><button type="submit" class="primary">应用裁剪</button></div></form></dialog>
+    <dialog id="crop-dialog"><form id="crop-form"><h2>裁剪边缘</h2><p>按原图百分比调整保留区域，再应用到当前页。</p><div class="crop-preview">${page ? `<img src="${page.corrected ?? page.original}" alt="裁剪原图" /><div id="crop-box"></div>` : ''}</div><div class="crop-fields">${(['left', 'top', 'right', 'bottom'] as const).map((key, index) => `<label>${['左边', '上边', '右边', '下边'][index]} %<input type="number" name="${key}" min="0" max="100" step="1" value="${page?.edit.crop[key] ?? 0}" required /></label>`).join('')}</div><div class="dialog-actions"><button type="button" data-action="close-crop">取消</button><button type="submit" class="primary">应用裁剪</button></div></form></dialog>
+    <dialog id="perspective-dialog"><form id="perspective-form"><h2>对齐纸张四角</h2><p>把四个圆点拖到纸张角上，再拉正文档。原图会保留，校正失败不会覆盖当前页。</p><div class="corner-preview">${page ? `<img src="${page.original}" alt="四角校正原图" />` : ''}<svg viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><polygon id="corner-outline" /></svg>${['左上', '右上', '右下', '左下'].map((name, i) => `<button type="button" class="corner-handle" data-corner="${i}" aria-label="调整${name}角">${i + 1}</button>`).join('')}</div><p class="hint">也可聚焦圆点后用方向键微调。</p><div class="dialog-actions"><button type="button" data-action="close-perspective">取消</button><button type="submit" class="primary">应用四角校正</button></div></form></dialog>
   `;
   bindEvents();
   if (busy) app.querySelectorAll<HTMLButtonElement>('button').forEach(button => { button.disabled = true; });
@@ -90,11 +95,16 @@ async function save(): Promise<void> {
 async function editPage(change: (edit: Edit) => void): Promise<void> {
   const page = selected(); if (!page) return;
   const edit = structuredClone(page.edit); change(edit);
-  const image = await renderPhoto(page.original, edit);
-  page.edit = edit; page.image = image; page.text = ''; dirty = true;
+  const corrected = edit.corners ? (page.corrected && JSON.stringify(page.edit.corners) === JSON.stringify(edit.corners) ? page.corrected : await correctOriginal(page.original, edit.corners)) : undefined;
+  const image = await renderPhoto(corrected ?? page.original, { ...edit, corners: undefined });
+  page.edit = edit; page.image = image; page.corrected = corrected; page.text = ''; dirty = true;
 }
 function safeSwitch(): boolean { return !dirty || confirm('当前文档尚未保存。是否放弃这些更改？'); }
 function bindEvents(): void {
+  for (const id of ['pdf-paper', 'pdf-orientation', 'pdf-margin']) document.querySelector(`#${id}`)?.addEventListener('change', () => {
+    current.pdf = { paper: document.querySelector<HTMLSelectElement>('#pdf-paper')!.value as PdfSettings['paper'], orientation: document.querySelector<HTMLSelectElement>('#pdf-orientation')!.value as PdfSettings['orientation'], margin: Number(document.querySelector<HTMLInputElement>('#pdf-margin')!.value) / 100 };
+    dirty = true;
+  });
   document.querySelector('#document-name')?.addEventListener('input', event => { current.name = (event.target as HTMLInputElement).value; dirty = true; });
   document.querySelector('#recognized-text')?.addEventListener('input', event => { const page = selected(); if (page) { page.text = (event.target as HTMLTextAreaElement).value; dirty = true; } });
   document.querySelector('#search')?.addEventListener('input', event => {
@@ -122,9 +132,12 @@ function bindEvents(): void {
     if (action === 'new') { if (safeSwitch()) { current = freshDocument(); selectedId = ''; dirty = false; notice = ''; render(); } return; }
     if (action === 'crop') { const dialog = document.querySelector<HTMLDialogElement>('#crop-dialog')!; dialog.showModal(); updateCropBox(); return; }
     if (action === 'close-crop') { document.querySelector<HTMLDialogElement>('#crop-dialog')!.close(); return; }
+    if (action === 'perspective') { workingCorners = structuredClone(selected()?.edit.corners ?? fullCorners()); document.querySelector<HTMLDialogElement>('#perspective-dialog')!.showModal(); updateCorners(); return; }
+    if (action === 'close-perspective') { document.querySelector<HTMLDialogElement>('#perspective-dialog')!.close(); return; }
     void run(async () => {
       if (action === 'save') { await save(); showNotice('文档已保存到本机。'); }
-      if (action === 'pdf') { const blob = await createPdf(current); await exportFile(blob, `${current.name.trim() || '文档'}.pdf`); showNotice('PDF 已导出。'); }
+      if (action === 'pdf') { showNotice('正在本地生成 PDF…'); await exportPdf(current, current.pdf ?? defaultPdfSettings()); showNotice('PDF 已导出。'); }
+      if (action === 'reset-page') { await editPage(edit => { Object.assign(edit, defaultEdit()); delete edit.corners; }); showNotice('已恢复原图。'); }
       if (action === 'rotate') { await editPage(edit => { edit.rotation = (edit.rotation + 90) % 360; }); showNotice('页面已旋转。'); }
       if (action === 'remove-page') { const index = current.pages.findIndex(page => page.id === selectedId); current.pages.splice(index, 1); selectedId = current.pages[Math.min(index, current.pages.length - 1)]?.id ?? ''; dirty = true; showNotice('页面已移除，保存后生效。'); }
       if (action === 'previous' || action === 'next') { const index = current.pages.findIndex(page => page.id === selectedId); const to = index + (action === 'previous' ? -1 : 1); if (index >= 0 && to >= 0 && to < current.pages.length) { [current.pages[index], current.pages[to]] = [current.pages[to], current.pages[index]]; dirty = true; } }
@@ -140,6 +153,38 @@ function bindEvents(): void {
     document.querySelector<HTMLDialogElement>('#crop-dialog')!.close();
     void run(async () => { await editPage(edit => { edit.crop = crop; }); showNotice('裁剪已应用。'); });
   });
+  document.querySelector('#perspective-form')?.addEventListener('submit', event => {
+    event.preventDefault();
+    const corners = structuredClone(workingCorners);
+    document.querySelector<HTMLDialogElement>('#perspective-dialog')!.close();
+    void run(async () => { showNotice('正在拉正文档…'); await editPage(edit => { edit.corners = corners; edit.crop = defaultEdit().crop; }); showNotice('四角校正已应用，原图已保留。'); });
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-corner]').forEach(handle => {
+    const i = Number(handle.dataset.corner);
+    const move = (event: PointerEvent) => {
+      if (!handle.hasPointerCapture(event.pointerId)) return;
+      const bounds = document.querySelector('.corner-preview')!.getBoundingClientRect();
+      workingCorners[i] = { x: Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width)), y: Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height)) };
+      updateCorners();
+    };
+    handle.addEventListener('pointerdown', event => { event.preventDefault(); handle.setPointerCapture(event.pointerId); });
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', event => { handle.releasePointerCapture(event.pointerId); });
+    handle.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+      event.preventDefault(); const step = event.shiftKey ? 0.02 : 0.005;
+      const point = workingCorners[i];
+      if (event.key === 'ArrowLeft') point.x -= step; if (event.key === 'ArrowRight') point.x += step;
+      if (event.key === 'ArrowUp') point.y -= step; if (event.key === 'ArrowDown') point.y += step;
+      point.x = Math.max(0, Math.min(1, point.x)); point.y = Math.max(0, Math.min(1, point.y)); updateCorners();
+    });
+  });
+}
+function updateCorners(): void {
+  document.querySelector('#corner-outline')!.setAttribute('points', workingCorners.map(p => `${p.x * 1000},${p.y * 1000}`).join(' '));
+  document.querySelectorAll<HTMLElement>('[data-corner]').forEach(handle => {
+    const p = workingCorners[Number(handle.dataset.corner)]; handle.style.left = `${p.x * 100}%`; handle.style.top = `${p.y * 100}%`;
+  });
 }
 function updateCropBox(): void {
   const form = document.querySelector<HTMLFormElement>('#crop-form')!;
@@ -150,4 +195,5 @@ function updateCropBox(): void {
 }
 window.addEventListener('beforeunload', event => { if (dirty) { event.preventDefault(); } });
 render();
+if (nativeCorePlatform()) void originalCore.capabilities().then(result => { canCorrect = result.perspective; render(); }).catch(() => showNotice('原生核心未就绪，请检查安装包。'));
 void listDocuments().then(result => { documents = result; render(); }).catch(() => showNotice('无法打开本地存储。请允许此页面使用浏览器存储。'));

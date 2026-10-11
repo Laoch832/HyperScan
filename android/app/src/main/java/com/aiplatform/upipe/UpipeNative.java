@@ -1,0 +1,40 @@
+package com.aiplatform.upipe;
+import android.content.Context;
+import android.graphics.Bitmap;
+/** JNI registration ABI only. HyperScan does not expose or initialize remote/model graphs. */
+public final class UpipeNative {
+    private native int addCallbackNative(long j3, String str, Object obj, Class cls);
+    private native int addCallbackNative(long j3, String str, Object obj, String str2);
+    private native int addCallbackWithTsNative(long j3, String str, Object obj, Class cls);
+    private native void addSearchPathNative(long j3, String str);
+    private native int closeUPipeNative(long j3);
+    private static native byte[] getBytesFromPacketNative(long j3);
+    private static native byte[] getFaceIdResultFromPacketNative(long j3);
+    private static native float[] getFloatArrayFromPacketNative(long j3);
+    private static native float getFloatFromPacketNative(long j3);
+    private static native byte[][] getImageFramesFromPacketNative(long j3);
+    private static native int[] getIntArrayFromPacketNative(long j3);
+    private static native int getIntFromPacketNative(long j3);
+    private static native String[] getStringArrayFromPacketNative(long j3);
+    private static native String getStringFromPacketNative(long j3);
+    private native byte[] getUpipeConfigNative(long j3);
+    public static native void glSyncTokenRelease(long j3);
+    public static native void glSyncTokenWaitOnCpu(long j3);
+    public static native void glSyncTokenWaitOnGpu(long j3);
+    private native long initUPipeNative(Context context, String str);
+    private native int loadGraphNative(long j3, String str);
+    private native int loadGraphNative(long j3, byte[] bArr);
+    private native int onNewFrameNative(long j3, Bitmap bitmap, long j4, String str);
+    private native int onNewFrameNative(long j3, byte[] bArr, int i3, int i4, int i5, long j4, String str);
+    private native int onNewFrameNative(long j3, byte[] bArr, int i3, int i4, int i5, String str);
+    private native int onNewPacketGpuNative(long j3, int i3, int i4, int i5, String str, long j4, Object obj);
+    private native int onNewPacketNative(long j3, int i3, long j4, String str);
+    private native int onNewPacketNative(long j3, String str, long j4, String str2);
+    private native void releaseUPipeNative(long j3);
+    private native void setEglSurfaceNative(long j3, long j4, long j5);
+    private static native void setFlipYNative(long j3, boolean z3);
+    private native void setParentGlContextNative(long j3, long j4);
+    private native void setSurfaceNative(long j3, long j4, Object obj);
+    private native long setSurfaceOutputNative(long j3, String str);
+    private native int startUPipeNative(long j3);
+}

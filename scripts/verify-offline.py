@@ -3,9 +3,12 @@
 import argparse
 import hashlib
 import json
+import io
 from pathlib import Path
 from zipfile import ZipFile
 from androguard.core.apk import APK
+from androguard.core.dex import DEX
+from elftools.elf.elffile import ELFFile
 from loguru import logger
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -16,7 +19,7 @@ logger.disable('androguard')
 apk = APK(str(args.apk))
 assert apk.get_package() == 'app.hyperscan.android'
 assert apk.get_app_name() == 'HyperScan'
-assert apk.get_androidversion_code() == '2'
+assert apk.get_androidversion_code() == '3'
 permissions = set(apk.get_permissions())
 assert not permissions & {'android.permission.INTERNET', 'android.permission.ACCESS_NETWORK_STATE',
                           'android.permission.READ_EXTERNAL_STORAGE', 'android.permission.WRITE_EXTERNAL_STORAGE'}
@@ -33,6 +36,29 @@ with ZipFile(args.apk) as archive:
     wasm = sorted(n for n in names if n.startswith(root + 'core/') and n.endswith('.wasm'))
     assert wasm
     assert not any('libsgmain' in n or 'yw_1222' in n for n in names)
+    native_manifest = json.loads((Path(__file__).resolve().parents[1] / 'community/core/native-manifest.json').read_text())
+    for library, sha256 in native_manifest['libraries'].items():
+        assert hashlib.sha256(archive.read('lib/arm64-v8a/' + library)).hexdigest() == sha256
+    registration = json.loads((Path(__file__).resolve().parents[1] / 'community/core/jni-registration.json').read_text())
+    declared = {}
+    for dex_name in names:
+        if dex_name.startswith('classes') and dex_name.endswith('.dex'):
+            for klass in DEX(archive.read(dex_name)).get_classes():
+                declared[klass.get_name()] = {(m.get_name(), m.get_descriptor().replace(' ', '')): m.get_access_flags() for m in klass.get_methods()}
+    for klass, methods in registration.items():
+        actual = declared['L' + klass + ';']
+        for method in methods:
+            assert actual[(method['name'], method['descriptor'])] & 0x100, (klass, method)
+    assert 'Lapp/hyperscan/android/OriginalCorePlugin;' in declared
+    supplied = set(native_manifest['libraries'])
+    platform = {'libc.so', 'libm.so', 'libdl.so', 'liblog.so', 'libandroid.so', 'libjnigraphics.so', 'libEGL.so', 'libGLESv2.so'}
+    native_dependencies = {}
+    for library in supplied:
+        elf = ELFFile(io.BytesIO(archive.read('lib/arm64-v8a/' + library)))
+        assert elf.header['e_machine'] == 'EM_AARCH64'
+        dependencies = [tag.needed for tag in elf.get_section_by_name('.dynamic').iter_tags() if tag.entry.d_tag == 'DT_NEEDED']
+        assert set(dependencies) <= supplied | platform, (library, dependencies)
+        native_dependencies[library] = dependencies
     csp = archive.read('assets/public/index.html').decode()
     assert 'Content-Security-Policy' in csp and "connect-src 'self' blob:" in csp
     for n in names:
@@ -41,13 +67,17 @@ with ZipFile(args.apk) as archive:
             assert not any(host in data for host in (b'scan.quark.cn', b'openacs4uc.m.taobao.com'))
     models = {n: hashlib.sha256(archive.read(n)).hexdigest() for n in sorted(required)}
 report = {
-    'author': 'Laoch832', 'edition': 'independent-offline', 'package': apk.get_package(),
+    'author': 'Laoch832', 'edition': 'original-core-migration-preview', 'package': apk.get_package(),
     'version': apk.get_androidversion_name(), 'version_code': apk.get_androidversion_code(),
     'apk_sha256': hashlib.sha256(args.apk.read_bytes()).hexdigest(), 'size_bytes': args.apk.stat().st_size,
     'network_permission': False, 'automatic_backup': False, 'debuggable': False,
     'permissions': sorted(permissions), 'packaged_ocr_files_sha256': models,
     'packaged_wasm_variants': wasm, 'original_security_sdk_present': False,
     'structural_checks_passed': True, 'android_device_tested': False,
+    'native_core_sha256': native_manifest['libraries'],
+    'native_dependencies': native_dependencies, 'jni_registration_methods_verified': sum(map(len, registration.values())),
+    'migrated_paths': ['QuarKit imagePerspective', 'PicturesPDFExportAndroidImp local drawing path'],
+    'not_migrated': ['automatic edge models', 'original OCR models', 'original intelligent enhancement models'],
     'browser_tests_cover': ['import', 'crop', 'rotate', 'enhance', 'local persistence', 'reorder',
                             'two-page image PDF', 'real OCR with external requests blocked', 'TXT', 'mobile dark mode'],
 }

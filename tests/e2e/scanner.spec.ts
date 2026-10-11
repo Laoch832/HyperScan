@@ -43,7 +43,29 @@ test('imports, crops, rotates, enhances, persists, reorders and exports a two pa
   expect(pdf.startsWith('%PDF-')).toBe(true);
   expect(pdf.match(/\/Type \/Page\b/g)).toHaveLength(2);
   expect(pdf).toContain('/Subtype /Image');
+  expect(pdf).toContain('/MediaBox [0 0 842. 595.]');
+  expect(pdf).toContain('/MediaBox [0 0 595. 842.]');
   await page.screenshot({ path: 'test-results/workspace.png', fullPage: true });
+});
+
+test('PDF paper settings survive saving and control the exported page size', async ({ page }) => {
+  await page.goto('/'); await importPage(page);
+  await page.locator('#pdf-paper').selectOption('a5');
+  await page.locator('#pdf-orientation').selectOption('portrait');
+  await page.locator('#pdf-margin').fill('10');
+  await page.locator('#pdf-margin').blur();
+  await page.getByRole('button', { name: '保存文档', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('文档已保存');
+  await page.reload();
+  await page.getByRole('button', { name: '打开 未命名文档', exact: true }).click();
+  await expect(page.locator('#pdf-paper')).toHaveValue('a5');
+  await expect(page.locator('#pdf-orientation')).toHaveValue('portrait');
+  await expect(page.locator('#pdf-margin')).toHaveValue('10');
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出 PDF', exact: true }).click();
+  const stream = await (await downloadPromise).createReadStream();
+  const chunks: Buffer[] = []; for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
+  expect(Buffer.concat(chunks).toString('latin1')).toContain('/MediaBox [0 0 420. 595.]');
 });
 
 test('recognizes text locally while external services are blocked', async ({ page, context }) => {

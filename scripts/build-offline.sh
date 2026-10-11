@@ -5,6 +5,7 @@ output=${1:?Specify a new APK output path}
 output=$(realpath -m "$output")
 test ! -e "$output" || { echo 'Choose a new output path.' >&2; exit 1; }
 python3 "$project_dir/scripts/setup-offline-android.py"
+python3 "$project_dir/scripts/prepare-original-core.py"
 tools_root=$(python3 - <<'PY'
 import os
 from pathlib import Path
