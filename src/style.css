@@ -29,3 +29,10 @@
   .corner-handle:active { cursor: grabbing; }
   #perspective-dialog { max-height: 90dvh; overflow-y: auto; }
 }
+
+.live-camera { width: min(100vw - 24px, 720px); max-height: 95dvh; padding: 16px; background: #18131e; color: #f7efff; border: 0; border-radius: 28px; }
+.live-camera::backdrop { background: #08050be8; }
+.live-camera video { display: block; width: 100%; height: min(65dvh, 660px); object-fit: contain; background: #000; border-radius: 20px; }
+.camera-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.live-camera p { text-align: center; min-height: 24px; }
+.camera-bar button { padding: 14px 22px; border-radius: 30px; }

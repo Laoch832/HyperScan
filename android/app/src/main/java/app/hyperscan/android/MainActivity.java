@@ -7,6 +7,7 @@ public class MainActivity extends BridgeActivity {
     @Override public void onCreate(Bundle state) {
         registerPlugin(OfflineExportPlugin.class);
         registerPlugin(OriginalCorePlugin.class);
+        registerPlugin(ScanCameraPlugin.class);
         super.onCreate(state);
     }
 }

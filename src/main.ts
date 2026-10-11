@@ -1,4 +1,5 @@
 import './style.css';
+import { scanCamera } from './camera';
 import { defaultEdit, readPhoto, renderPhoto, type Edit } from './image';
 import { listDocuments, saveDocument, removeDocument, type ScanDocument, type Page } from './storage';
 import { exportPdf, exportFile } from './export';
@@ -44,7 +45,7 @@ function render(): void {
       <div class="sidebar-bottom">${icon('shield')}<div>文档留在你的设备上<small>本地处理 · 自由使用</small></div></div>
     </aside>
     <main>
-      <header><span class="breadcrumb">工作空间 <span>/</span> 我的文档</span><span class="edition">核心迁移测试 0.3</span></header>
+      <header><span class="breadcrumb">工作空间 <span>/</span> 我的文档</span><span class="edition">实时相机测试 0.4</span></header>
       <section class="heading"><div><p class="eyebrow">MAKE ROOM FOR YOUR IDEAS</p><h1>纸张，变成可能。</h1><p class="subtitle">拍摄、编辑、识字、导出。每一步，都在你的设备上。</p></div><div class="local-badge"><span></span> 无需联网</div></section>
       <section class="workspace">
         <div class="editor-panel">
@@ -68,7 +69,6 @@ function render(): void {
       <footer>HyperScan · Laoch832 <span>·</span> 由 Laoch832 创作与维护。</footer>
     </main>
     <input class="sr-only" id="file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple />
-    <input class="sr-only" id="camera-input" type="file" accept="image/*" capture="environment" />
     <div id="notice" role="status" aria-live="polite" class="notice ${notice ? 'visible' : ''}">${escape(notice)}</div>
     <dialog id="crop-dialog"><form id="crop-form"><h2>裁剪边缘</h2><p>按原图百分比调整保留区域，再应用到当前页。</p><div class="crop-preview">${page ? `<img src="${page.corrected ?? page.original}" alt="裁剪原图" /><div id="crop-box"></div>` : ''}</div><div class="crop-fields">${(['left', 'top', 'right', 'bottom'] as const).map((key, index) => `<label>${['左边', '上边', '右边', '下边'][index]} %<input type="number" name="${key}" min="0" max="100" step="1" value="${page?.edit.crop[key] ?? 0}" required /></label>`).join('')}</div><div class="dialog-actions"><button type="button" data-action="close-crop">取消</button><button type="submit" class="primary">应用裁剪</button></div></form></dialog>
     <dialog id="perspective-dialog"><form id="perspective-form"><h2>对齐纸张四角</h2><p>把四个圆点拖到纸张角上，再拉正文档。原图会保留，校正失败不会覆盖当前页。</p><div class="corner-preview">${page ? `<img src="${page.original}" alt="四角校正原图" />` : ''}<svg viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><polygon id="corner-outline" /></svg>${['左上', '右上', '右下', '左下'].map((name, i) => `<button type="button" class="corner-handle" data-corner="${i}" aria-label="调整${name}角">${i + 1}</button>`).join('')}</div><p class="hint">也可聚焦圆点后用方向键微调。</p><div class="dialog-actions"><button type="button" data-action="close-perspective">取消</button><button type="submit" class="primary">应用四角校正</button></div></form></dialog>
@@ -111,7 +111,7 @@ function bindEvents(): void {
     search = (event.target as HTMLInputElement).value; render();
     const input = document.querySelector<HTMLInputElement>('#search')!; input.focus(); input.setSelectionRange(search.length, search.length);
   });
-  for (const id of ['file-input', 'camera-input']) document.querySelector(`#${id}`)?.addEventListener('change', event => {
+  for (const id of ['file-input']) document.querySelector(`#${id}`)?.addEventListener('change', event => {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     if (files.length) void run(async () => {
       showNotice('正在导入图片…');
@@ -128,7 +128,15 @@ function bindEvents(): void {
   });
   app.querySelectorAll<HTMLElement>('[data-action]').forEach(button => button.onclick = () => {
     const action = button.dataset.action;
-    if (action === 'import' || action === 'camera') { document.querySelector<HTMLInputElement>(action === 'import' ? '#file-input' : '#camera-input')!.click(); return; }
+    if (action === 'import') { document.querySelector<HTMLInputElement>('#file-input')!.click(); return; }
+    if (action === 'camera') { void run(async () => {
+      let count = 0;
+      await scanCamera(image => {
+        const id = crypto.randomUUID(); current.pages.push({ id, original: image, image, edit: defaultEdit(), text: '' });
+        selectedId = id; dirty = true; count++;
+      });
+      showNotice(count ? `已拍摄 ${count} 页，可继续校正、编辑并保存。` : '已返回编辑，没有添加照片。');
+    }); return; }
     if (action === 'new') { if (safeSwitch()) { current = freshDocument(); selectedId = ''; dirty = false; notice = ''; render(); } return; }
     if (action === 'crop') { const dialog = document.querySelector<HTMLDialogElement>('#crop-dialog')!; dialog.showModal(); updateCropBox(); return; }
     if (action === 'close-crop') { document.querySelector<HTMLDialogElement>('#crop-dialog')!.close(); return; }

@@ -110,3 +110,31 @@ test('small screens fit and deleting a saved document survives reload', async ({
   await expect(page.locator('.empty-library')).toContainText('保存的文档会出现在这里');
   await page.screenshot({ path: 'test-results/mobile.png', fullPage: true });
 });
+
+test('live camera renders frames, captures successive pages and releases the camera on return', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '用相机拍摄' }).click();
+  const video = page.getByLabel('相机实时取景');
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.videoWidth > 0 && v.readyState >= 2)).toBe(true);
+  await video.evaluate((v: HTMLVideoElement) => { (window as any).__cameraTrack = (v.srcObject as MediaStream).getVideoTracks()[0]; });
+  await page.getByRole('button', { name: '● 拍摄', exact: true }).click();
+  await page.getByRole('button', { name: '● 拍摄', exact: true }).click();
+  await expect(page.getByRole('button', { name: '完成 · 2 页' })).toBeVisible();
+  await page.getByRole('button', { name: '完成 · 2 页' }).click();
+  await expect(page.locator('.thumbnail')).toHaveCount(2);
+  expect(await page.evaluate(() => (window as any).__cameraTrack.readyState)).toBe('ended');
+  await expect.poll(() => page.locator('.preview img').evaluate((v: HTMLImageElement) => v.naturalWidth > 0)).toBe(true);
+  await page.getByRole('button', { name: '拍摄文档', exact: true }).click();
+  await expect(page.getByRole('button', { name: '● 拍摄', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: '返回编辑' }).click();
+  await expect(page.locator('.thumbnail')).toHaveCount(2);
+});
+
+test('camera permission denial preserves editing and offers a clear error', async ({ page, context }) => {
+  await context.clearPermissions();
+  await page.goto('/');
+  await page.getByRole('button', { name: '用相机拍摄' }).click();
+  await expect(page.getByRole('status')).toContainText('相机权限未允许');
+  await expect(page.locator('.live-camera')).toHaveCount(0);
+  await importPage(page);
+});

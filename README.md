@@ -1,8 +1,14 @@
 # HyperScan · 原扫描核心迁移
 
-作者与维护者：[Laoch832](https://github.com/Laoch832) · [官网](https://laoch832.github.io/HyperScan/) · [核心迁移测试包](https://github.com/Laoch832/HyperScan/releases/tag/core-preview-0.3.0)
+作者与维护者：[Laoch832](https://github.com/Laoch832) · [官网](https://laoch832.github.io/HyperScan/) · [核心迁移测试包](https://github.com/Laoch832/HyperScan/releases/tag/camera-preview-0.4.0)
 
 目标是保留原扫描软件可本地运行的核心能力，拆除云端依赖，再迁移到采用 Material 3 Expressive 界面的 HyperScan。包名 `app.hyperscan.android`，没有网络权限、登录、会员、STS 上传、CMS 拉取、云同步和远程转换。**0.3.0 是第一批核心迁移测试包，不是全部核心已经迁移完成的版本。**此前 0.2.0 属于独立扫描原型，不符合原核心保留目标。
+
+## 0.4.0 应用内实时扫描相机
+
+点击“拍摄文档”直接进入应用内 CameraX 实时取景，不再跳转系统相机。支持后置相机、点击对焦、补光、连续拍摄（单次20页），完成/返回将已拍页面加入当前文档，原图保留并接入校正、编辑、识字及PDF路径。相机权限按需请求；无需联网或相册读写权限。临时JPEG在页面读取后清理，退出相机释放硬件。取景保持原始宽高比；当前不提供自动找边。
+
+浏览器使用 getUserMedia 实时视频与本地帧捕获，返回/隐藏页面停止媒体流；需要 HTTPS 或 localhost。浏览器测试用 Chromium 模拟摄像头验证连续两页、取景尺寸、返回后停止轨道与权限拒绝；不等于 Android 真机验证。Android相机日志标签为 `HyperScanCamera`。
 
 ## 本次实际接入
 
@@ -38,14 +44,14 @@ npm run dev -- --port 5173 --strictPort
 JDK21、SDK36、Build Tools35/36和Gradle8.14.3由脚本固定并校验。签名/审计构建：
 
 ```sh
-bash scripts/build-offline.sh /workspace/artifacts/HyperScan-0.3.0-core-preview.apk
+bash scripts/build-offline.sh /workspace/artifacts/HyperScan-0.4.0-camera-preview.apk
 ```
 
 脚本拒绝覆盖已有产物，复用 checkout 外的开发签名。不得把密钥/密码上传到仓库。`postinstall` 复制 OCR 的 Worker、WASM 和 `.traineddata`；使用 `gzip:false` 防止 AAPT 剥离 gzip 后缀导致加载失败。
 
 ## 验证范围
 
-本次通过12项单元测试、5项浏览器流程测试、Android Release 编译、APK签名/对齐审计，以及原库摘要、依赖和73项JNI注册签名检查。浏览器测试覆盖混合横竖页PDF、PDF设置保存、裁剪/旋转、文档保存与排序、本地OCR（阻断外部请求）、TXT、手机深色模式。
+本次通过12项单元测试、7项浏览器流程测试、Android Release 编译、APK签名/对齐审计，以及原库摘要、依赖和73项JNI注册签名检查。浏览器测试覆盖混合横竖页PDF、PDF设置保存、裁剪/旋转、文档保存与排序、本地OCR（阻断外部请求）、TXT、手机深色模式。
 
 **云环境没有 Android 设备。原库加载与真实透视结果、Android原生PDF、拍照和保存回调尚未经真机验证。**静态 JNI 匹配不能证明算法已在设备上跑通。首次测试建议断网导入一张斜拍纸张，调整四角、保存/重新打开、导出PDF；失败时保留 `HyperScanCore` 标签的原始错误栈。日志不输出图片、凭据或请求正文。
 

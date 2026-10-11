@@ -20,8 +20,9 @@ logger.disable('androguard')
 apk = APK(str(args.apk))
 assert apk.get_package() == 'app.hyperscan.android'
 assert apk.get_app_name() == 'HyperScan'
-assert apk.get_androidversion_code() == '3'
+assert apk.get_androidversion_code() == '4'
 permissions = set(apk.get_permissions())
+assert 'android.permission.CAMERA' in permissions
 assert not permissions & {'android.permission.INTERNET', 'android.permission.ACCESS_NETWORK_STATE',
                           'android.permission.READ_EXTERNAL_STORAGE', 'android.permission.WRITE_EXTERNAL_STORAGE'}
 manifest = apk.get_android_manifest_xml()
@@ -29,6 +30,8 @@ android = '{http://schemas.android.com/apk/res/android}'
 application = manifest.find('application')
 assert application.get(android + 'allowBackup') == 'false'
 assert application.get(android + 'debuggable', 'false') == 'false'
+camera_activity = next(a for a in application.findall('activity') if a.get(android + 'name', '').endswith('.ScanCameraActivity'))
+assert camera_activity.get(android + 'exported') == 'false'
 with ZipFile(args.apk) as archive:
     names = set(archive.namelist())
     root = 'assets/public/ocr/'
